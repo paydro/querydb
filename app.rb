@@ -1,4 +1,4 @@
-$:.unshift(File.join(File.dirname(__FILE__))
+$:.unshift(File.dirname(__FILE__))
 require 'sinatra/base'
 require 'mustache/sinatra'
 require 'mysql'
