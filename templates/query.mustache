@@ -1,0 +1,20 @@
+<table>
+  <thead>
+    <tr>
+      {{#columns}}
+        <th>{{to_s}}</th>
+      {{/columns}}
+    </tr>
+  </thead>
+  <tbody>
+      {{#rows}}
+        <tr>
+          {{#cols}}
+            <td class="{{field_type}}">
+              {{to_s}}
+            </td>
+          {{/cols}}
+        </tr>
+      {{/rows}}
+  </tbody>
+</table>
