@@ -1,3 +1,12 @@
+var keyLogger = function(e){
+    console.log("KeyPress");
+    console.log("keyCode: " + e.keyCode);
+    console.log("meta: " + e.metaKey);
+    console.log("alt: " + e.altKey);
+    console.log("ctrl: " + e.ctrlKey);
+    console.log(e.target);
+};
+
 var QueryStore = {
     push: function(query){
         hash = "#" + $.sha1(query);
@@ -8,157 +17,75 @@ var QueryStore = {
         return localStorage.getItem(hash);
     },
     findAll: function(){
+        // NOTE: localStorage stores items in an arbitrary order
         var hashes = [];
         var ls = localStorage;
         for(i = 0; i < ls.length; i++){
             hashes[i] = ls.key(i);
         }
 
-        // NOTE: localStorage stores items in an arbitrary order
         return hashes;
     },
 
 };
-var Navigator = {
-    selected: function(){ return $("#results td.selected"); },
-    moveLeft: function(){
-        if(this.selected().prev().length){
-            this.selected().
-                removeClass("selected").
-                prev().addClass("selected");
 
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollLeft(this.selected());
-            }
-        }
+QueryBuilder = {
+    columnName: function(element){
+        var headerIndex = $(element).index() + 1;
+        return $("thead tr th:nth-child(" + headerIndex + ")").text();
     },
-    moveRight: function(){
-        if(this.selected().next().length){
-            this.selected().
-                removeClass("selected").
-                next().addClass("selected");
-
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollRight(this.selected());
-            }
-        }
+    tableize: function(str){
+        console.log(str);
+        return str.replace(/_id/, "s");
     },
-    moveUp: function(){
-        if(this.selected().parent().prev().length){
-            var index = this.selected().index();
-            var newSelected = this.selected().
-                removeClass("selected").
-                parent().
-                prev().children().get(index);
-            $(newSelected).addClass("selected");
+    findParentRecord: function(element){
+        var header = this.columnName(element);
 
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollUp(this.selected());
-            }
-        }
+        var query = "SELECT * \n" +
+                    "FROM " + this.tableize(header) + "\n" +
+                    "WHERE id = " + element.text().trim();
+        $("form textarea").text(query);
+        $("#query").trigger("query");
     },
-    moveDown: function(){
-        if(this.selected().parent().next().length){
-            var index = this.selected().index();
-            var newSelected = this.selected().
-                removeClass("selected").
-                parent().
-                next().children().get(index);
-            $(newSelected).addClass("selected");
-
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollDown(this.selected());
-            }
-        }
-    },
-
-    moveTo: function(element){
-        this.selected().removeClass("selected");
-        element.addClass("selected");
-    },
-};
-
-var Scroller = {
-    isInView: function(element){
-        var results = $("#results");
-        var windowTop = $(window).scrollTop();
-        var windowBottom = windowTop + $(window).height();
-
-        var resultsLeft = results.offset().left;
-        var resultsRight = resultsLeft + results.width();
-
-        var elemTop = element.offset().top;
-        // Compensate for scroll bars
-        var elemBottom = elemTop + (2.5 * element.height());
-
-        var elemLeft = element.offset().left;
-        var elemRight = elemLeft + element.width();
-
-        var v = ((elemBottom <= windowBottom) && (elemTop >= windowTop));
-        var h = ((elemRight <= resultsRight) && (elemLeft >= resultsLeft));
-
-        return (h && v);
-    },
-    scrollLeft: function(element){
-        var r = $("#results");
-        var scrollTo = r.scrollLeft() -
-                       (r.offset().left - element.offset().left);
-        $("#results").scrollLeft(scrollTo);
-    },
-    scrollRight: function(element){
-        var r = $("#results");
-        var scrollTo = r.scrollLeft() +
-                       (element.offset().left - r.width());
-        r.scrollLeft(scrollTo, 400);
-    },
-    scrollUp: function(element){
-        $(window).scrollTop(element.offset().top);
-    },
-
-    scrollDown: function(element){
-        $(window).scrollTop($(window).scrollTop() + (2 * element.height()));
-    },
-};
-
-var HashStack = function(){
-    // Array of hashes
-    var stack = [];
-    var pointer = 0;
-
-    // Load up stack
-    stack = QueryStore.findAll();
-
-    // Point to the last hash in the stack
-    if(stack.length) {
-        pointer = stack.length - 1;
-    }
-
-    this.next = function(){
-        if(pointer == stack.length - 1){
-            return stack[pointer];
-        }
-        else {
-            return stack[++pointer];
-        }
-    };
-
-    this.prev = function(){
-        if(pointer == 0){
-            return stack[pointer];
-        }
-        else {
-            return stack[--pointer];
-        }
-    };
-
-    this.push = function(hash){
-        stack.push(hash);
-        ++pointer;
-    };
 }
 
+var bindKeys = function(keyDefinition){
+    var r = $("#results");
+
+    for(key in keyDefinition){
+        console.log("Binding " + key + " to " + keyDefinition[key]);
+        r.bind(key, keyDefinition[key]);
+    }
+};
+
+
+// ***************
+// Onload function
+// ***************
 $(function(){
     hashes = new HashStack();
+
+    bindKeys({
+        // Focus on query textarea
+        "/": function(){
+            $("#query form textarea").focus();
+            // Prevent "/" char appearing in textarea
+            e.preventDefault();
+        },
+
+        // History navigation
+        "n": function(){ window.location.hash = hashes.next() },
+        "p": function(){ window.location.hash = hashes.prev() },
+
+        // Table navigation
+        "h": function(){ Navigator.moveLeft(); },
+        "l": function(){ Navigator.moveRight(); },
+        "j": function(){ Navigator.moveDown(); },
+        "k": function(){ Navigator.moveUp(); },
+
+        // Go to parent table for foreign key
+        "<CR>": function(){ QueryBuilder.findParentRecord($("#results .selected")); },
+    });
 
     // Make the body the focus on load to allow for keyboard interaction
     $("#results").focus();
@@ -186,52 +113,67 @@ $(function(){
 
     // Focus on query box with "/"
     $("body").live("keypress", function(e){
-        // console.log("KeyPress");
-        // console.log("keyCode: " + e.keyCode);
-        // console.log("meta: " + e.metaKey);
-        // console.log("alt: " + e.altKey);
-        // console.log("ctrl: " + e.ctrlKey);
-        // console.log(e.target);
+        keyLogger(e);
+        var r = $("#results");
 
         if(e.target.nodeName.toLowerCase() == "textarea"){
             return; // Do nothing when inside the textarea
         }
 
+        var keyTranslation = {
+            13: "<CR>",
+            47: "/",
+            110: "n",
+            112: "p",
+            104: "h",
+            108: "l",
+            106: "j",
+            107: "k",
+        };
         switch(e.keyCode){
-            case 47: // "/"
-                $("#query form textarea").focus();
-                e.preventDefault(); // Prevents a "/" char to appear in textarea
+            // case 47: // "/"
+                // $("#query form textarea").focus();
+                // // Prevent "/" char appearing in textarea
+                // e.preventDefault();
+                // break;
+
+            // // Parent lookup for foreign key
+            // case 13:
+                // QueryBuilder.findParentRecord($("#results .selected"));
+                // break;
+
+            default:
+                console.log("Triggering: " + keyTranslation[e.keyCode]);
+                r.trigger(keyTranslation[e.keyCode]);
                 break;
 
-            case 110: // "n"
-                window.location.hash = hashes.next();
-                break;
+            // NAVIGATION KEYS
+            // case 110: // "n"
+                // r.trigger("n");
+                // // window.location.hash = hashes.next();
+                // break;
+            // case 112: // "p"
+                // r.trigger("p");
+                // // window.location.hash = hashes.prev();
+                // break;
+            // case 104: // "h"
+                // r.trigger("h");
+                // // Navigator.moveLeft();
+                // break;
+            // case 108: // "l"
+                // r.trigger("l");
+                // // Navigator.moveRight();
+                // break;
+            // case 106: // "j"
+                // r.trigger("j");
+                // // Navigator.moveDown();
+                // break;
+            // case 107: // "k"
+                // r.trigger("k");
+                // // Navigator.moveUp();
+                // break;
 
-            case 112: // "p"
-                window.location.hash = hashes.prev();
-                break;
-
-            case 104: // "h"
-                // Move left
-                Navigator.moveLeft();
-                break;
-
-            case 108: // "l"
-                // Move right
-                Navigator.moveRight();
-                break;
-
-            case 106: // "j"
-                // Move down
-                Navigator.moveDown();
-                break;
-
-            case 107: // "k"
-                // Move up
-                Navigator.moveUp();
-                break;
-        }
-
+        } // End switch statement
     });
 
     $("#results td").live("click", function(){
@@ -259,6 +201,7 @@ $(function(){
                 $("#results").html(html);
                 // Allow for movement!
                 $("#results td:first").addClass("selected");
+                Scroller.scrollToStart();
             },
             error: function(response){
                 $("#results").html(response.responseText);
