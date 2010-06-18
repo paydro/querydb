@@ -3,6 +3,7 @@ require 'sinatra/base'
 require 'mustache/sinatra'
 require 'mysql'
 require 'yaml'
+require 'pp'
 
 module QueryDB
 

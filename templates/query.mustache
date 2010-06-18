@@ -2,7 +2,7 @@
   <thead>
     <tr>
       {{#columns}}
-        <th>{{to_s}}</th>
+        <th>{{name}}</th>
       {{/columns}}
     </tr>
   </thead>
@@ -10,8 +10,8 @@
       {{#rows}}
         <tr>
           {{#cols}}
-            <td class="{{field_type}}">
-              {{to_s}}
+            <td class="{{type}}">
+              {{name}}
             </td>
           {{/cols}}
         </tr>

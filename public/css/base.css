@@ -63,13 +63,26 @@ body {
 
     #results td {
       vertical-align: top;
-      /* white-space: nowrap; */
+      border: 1px solid #BBB;
     }
 
     #results thead tr {
-        border-bottom: 1px solid #bbb;
+      border: 1px solid #bbb;
     }
 
     #results tbody tr:nth-child(odd) {
-        background-color: #e8e8e8;
+      background-color: #e8e8e8;
+    }
+
+    #results td.type_datetime,
+    #results td.type_var_string,
+    #results td.type_char,
+    #results td.type_date {
+      white-space: nowrap;
+    }
+
+    #results td.selected {
+      background-color: #333;
+      color: #FFF;
+      border-color: #000;
     }
