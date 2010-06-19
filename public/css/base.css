@@ -44,6 +44,9 @@ body {
   font-family: "Bitstream Vera Sans Mono";
 }
 
+#query button {
+  float: right;
+}
 #query input[type=submit] {
     float: right;
 }

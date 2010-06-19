@@ -54,36 +54,27 @@ QueryBuilder = {
 
 var KeyManager = function(){
     var mappings = {};
-    var state = "";
+    var scope = null;
 
-    var inState = function(){
-        return state !== "";
+    var inScope = function(){
+        return scope !== null;
     };
 
-    var addState = function(s){
-        state += s;
-    };
-    var setState = function(s){
-        state = s;
+    var setScope = function(s){
+        scope = s;
     };
 
     // DEBUG
-    this.defs = function(){
-        return mappings;
-    };
-    this.showDefs = function(){
-        console.log(mappings);
-    };
-
-    this.showState = function(){
-        console.log(state);
-    };
+    this.defs = function(){ return mappings; };
+    this.showScope = function(){ console.log(scope); };
     // END DEBUG
 
     // Find function to call for a given key
     this.find = function(eventKey){
-        if(inState()){
-            return mappings["state-" + state][eventKey];
+        if(inScope()){
+            fn = mappings["scope-" + scope][eventKey];
+            this.resetScope();
+            return fn;
         }
         else {
             return mappings[eventKey];
@@ -91,9 +82,9 @@ var KeyManager = function(){
     };
 
     // <3 closures
-    var stateSetFn = function(k){
+    var setScopeFn = function(k){
         return (function(){
-            addState(k);
+            setScope(k);
         });
     };
 
@@ -102,8 +93,8 @@ var KeyManager = function(){
     this.define = function(definition){
         for(key in definition){
             if(typeof(definition[key]) === "object"){
-                mappings[key] = stateSetFn(key);
-                mappings["state-" + key] = definition[key];
+                mappings[key] = setScopeFn(key);
+                mappings["scope-" + key] = definition[key];
             }
             else {
                 mappings[key] = definition[key];
@@ -111,38 +102,39 @@ var KeyManager = function(){
         }
     };
 
-    this.resetState = function(){
-        setState("");
+    this.resetScope = function(){
+        setScope(null);
     }
 
 };
 var keyManager = new KeyManager();
 keyManager.define({
     // Focus on query textarea
-    "/": function(event){ $("#query form textarea").focus(); event.preventDefault(); },
+    "/": function(event){
+        $("#query form textarea").focus(); event.preventDefault();
+    },
 
     // History navigation
     "n": function(){ window.location.hash = hashes.next() },
     "p": function(){ window.location.hash = hashes.prev() },
 
     // Table navigation
-    // NOTE: Need so that I don't have to create a function here, but just give it
-    // the function name - i.e., Navigator.moveLeft. Navigator is using "this"
-    // and when not inside a function like below, this means the element. FAIL.
+    // TODO: Change so that I don't have to create a function here,
+    // but just give it the function name - i.e., Navigator.moveLeft.
+    // Navigator is using "this" and when not inside a function like below,
+    // this means the element. FAIL.
     "h": function(){ Navigator.moveLeft(); },
     "l": function(){ Navigator.moveRight(); },
     "j": function(){ Navigator.moveDown(); },
     "k": function(){ Navigator.moveUp(); },
     "g": {
-        // Not working yet
-        // "g": {
-            // "t": function() { console.log("double ggt"); },
-        // },
         "t": function(){ console.log('go to table'); },
     },
 
     // Go to parent table for foreign key
-    "<CR>": function(){ QueryBuilder.findParentRecord($("#results .selected")); },
+    "<CR>": function(){
+        QueryBuilder.findParentRecord($("#results .selected"));
+    },
 });
 
 var KeyTranslator = {
@@ -219,9 +211,15 @@ $(function(){
     // Make the body the focus on load to allow for keyboard interaction
     $("#results").focus();
 
-    // Clicking form submit
+    // Form submit
     $("#query form").live("submit", function(){
         $("#query").trigger("query");
+        return false;
+    });
+
+    // Clear history
+    $("#query button").live("click", function(){
+        hashes.clear();
         return false;
     });
 
@@ -240,21 +238,18 @@ $(function(){
         }
     });
 
-    // $("body").live("keydown", function(e){
-        // keyLogger(e);
-    // });
     // Focus on query box with "/"
     $("body").live("keydown", function(e){
         var r = $("#results");
-        keyLogger(e);
 
         if(e.keyCode == 27){
-            keyManager.resetState();
+            keyManager.resetScope();
         }
         if(e.target.nodeName.toLowerCase() == "textarea"){
             return; // Do nothing when inside the textarea
         }
 
+        keyLogger(e);
         // TODO: Remove this conditional when all keys are mapped
         var eventKey = KeyTranslator.translate(e);
         if(typeof eventKey !== "undefined"){

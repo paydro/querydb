@@ -36,6 +36,12 @@ var HashStack = function(){
         ++pointer;
     };
 
+    this.clear = function(){
+        stack = [];
+        pointer = 0;
+        QueryStore.clear();
+    };
+
     // Print out hash ordering and the corresponding queries
     this.debug = function(){
         console.log("Pointer at: " + pointer);
