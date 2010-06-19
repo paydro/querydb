@@ -1,0 +1,5 @@
+TODO:
+
+* Don't save bad queries into the hashstack
+* Add MRU to hashstack that works like a browser's back/foward
+
