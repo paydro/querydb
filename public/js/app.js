@@ -54,37 +54,48 @@ QueryBuilder = {
 
 var KeyManager = function(){
     var mappings = {};
-    var scope = null;
+    var scope = [];
 
     // == Private functions ==
-    var inScope = function(){
-        return scope !== null;
-    };
+    var inScope = function(){ return scope.length; };
+    var setScope = function(s){ scope = s; };
+    var addScope = function(s){ scope.push(s); };
+    var findScopeDefs = function(){
+        if(!inScope()){
+            return mappings;
+        }
 
-    var setScope = function(s){
-        scope = s;
+        var currentDefs = mappings;
+        for(i = 0; i < scope.length; i++){
+            currentDefs = currentDefs[scope[i]];
+        }
+
+        return currentDefs;
     };
 
     // == DEBUG functions ==
     this.defs = function(){ return mappings; };
     this.showScope = function(){ console.log(scope); };
 
+
     // Find function to call for a given key
     this.find = function(eventKey){
-        if(inScope()){
-            fn = mappings["scope-" + scope][eventKey];
-            this.resetScope();
-            return fn;
+        var defs = findScopeDefs();
+        fnOrObj = defs[eventKey];
+
+        if(typeof fnOrObj === "object"){
+            return setScopeFn(eventKey);
         }
         else {
-            return mappings[eventKey];
+            this.resetScope();
+            return fnOrObj;
         }
     };
 
     // <3 closures
     var setScopeFn = function(k){
         return (function(){
-            setScope(k);
+            addScope(k);
         });
     };
 
@@ -92,18 +103,18 @@ var KeyManager = function(){
     // TODO: Make it recursive to define multiple layers of namespaces
     this.define = function(definition){
         for(key in definition){
-            if(typeof(definition[key]) === "object"){
-                mappings[key] = setScopeFn(key);
-                mappings["scope-" + key] = definition[key];
-            }
-            else {
+            // if(typeof(definition[key]) === "object"){
+                // mappings[key] = setScopeFn(key);
+                // mappings["scope-" + key] = definition[key];
+            // }
+            // else {
                 mappings[key] = definition[key];
-            }
+            // }
         }
     };
 
     this.resetScope = function(){
-        setScope(null);
+        setScope([]);
     }
 
 };
@@ -129,6 +140,10 @@ keyManager.define({
     "j": function(){ Navigator.moveDown(); },
     "k": function(){ Navigator.moveUp(); },
     "g": {
+        "g": {
+            "t": function(){ console.log("gtt pressed"); },
+            "g": function(){ console.log("ggg pressed"); },
+        },
         "t": function(e){ console.log("gt pressed"); },
     },
 
