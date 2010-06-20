@@ -12,7 +12,7 @@ var KeyTranslator = {
         }
     },
 
-    // Return an arrawy of modifier keys
+    // Return an array of modifier keys
     modifierKeys: function(e){
         var modifiers = [];
         // Ordering of modifiers is important
