@@ -56,6 +56,7 @@ var KeyManager = function(){
     var mappings = {};
     var scope = null;
 
+    // == Private functions ==
     var inScope = function(){
         return scope !== null;
     };
@@ -64,10 +65,9 @@ var KeyManager = function(){
         scope = s;
     };
 
-    // DEBUG
+    // == DEBUG functions ==
     this.defs = function(){ return mappings; };
     this.showScope = function(){ console.log(scope); };
-    // END DEBUG
 
     // Find function to call for a given key
     this.find = function(eventKey){
