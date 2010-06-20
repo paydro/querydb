@@ -52,75 +52,8 @@ QueryBuilder = {
     },
 }
 
-var KeyManager = function(){
-    var mappings = {};
-    var scope = [];
-
-    // == Private functions ==
-    var inScope = function(){ return scope.length; };
-    var setScope = function(s){ scope = s; };
-    var addScope = function(s){ scope.push(s); };
-    var findScopeDefs = function(){
-        if(!inScope()){
-            return mappings;
-        }
-
-        var currentDefs = mappings;
-        for(i = 0; i < scope.length; i++){
-            currentDefs = currentDefs[scope[i]];
-        }
-
-        return currentDefs;
-    };
-
-    // == DEBUG functions ==
-    this.defs = function(){ return mappings; };
-    this.showScope = function(){ console.log(scope); };
-
-
-    // Find function to call for a given key
-    this.find = function(eventKey){
-        var defs = findScopeDefs();
-        fnOrObj = defs[eventKey];
-
-        if(typeof fnOrObj === "object"){
-            return setScopeFn(eventKey);
-        }
-        else {
-            this.resetScope();
-            return fnOrObj;
-        }
-    };
-
-    // <3 closures
-    var setScopeFn = function(k){
-        return (function(){
-            addScope(k);
-        });
-    };
-
-    // Define key actions
-    // TODO: Make it recursive to define multiple layers of namespaces
-    this.define = function(definition){
-        for(key in definition){
-            // if(typeof(definition[key]) === "object"){
-                // mappings[key] = setScopeFn(key);
-                // mappings["scope-" + key] = definition[key];
-            // }
-            // else {
-                mappings[key] = definition[key];
-            // }
-        }
-    };
-
-    this.resetScope = function(){
-        setScope([]);
-    }
-
-};
-
-var keyManager = new KeyManager();
-keyManager.define({
+var sweetKeys = new SweetKeys();
+sweetKeys.define({
     // Focus on query textarea
     "/": function(event){
         $("#query form textarea").focus(); event.preventDefault();
@@ -191,11 +124,10 @@ $(function(){
     });
 
     // Focus on query box with "/"
+    // TODO: Move this function into SweetKeys
     $("body").live("keydown", function(e){
-        var r = $("#results");
-
         if(e.keyCode == 27){
-            keyManager.resetScope();
+            sweetKeys.resetScope();
         }
         if(e.target.nodeName.toLowerCase() == "textarea"){
             return; // Do nothing when inside the textarea
@@ -203,9 +135,9 @@ $(function(){
 
         keyLogger(e);
         // TODO: Remove this conditional when all keys are mapped
-        var eventKey = KeyTranslator.translate(e);
+        var eventKey = SweetKeys.Translator.translate(e);
         if(typeof eventKey !== "undefined"){
-            var fn = keyManager.find(eventKey);
+            var fn = sweetKeys.find(eventKey);
             if(typeof fn !== "undefined"){ fn(e); }
         }
     });

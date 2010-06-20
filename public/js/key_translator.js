@@ -1,38 +1,101 @@
-var KeyTranslator = {
-    isModifierPressed: function(e){
-        // 13 = enter
-        return (e.metaKey || e.ctrlKey || e.altKey || (e.keyCode === 13));
-    },
-    codeToKey: function(code, shift){
-        if(shift){
-            return KeyTranslator.upperCase[code];
+var SweetKeys = function(){
+    var keyMap = {};
+    var scope = [];
+
+    // == Private functions ==
+    var inScope = function(){ return scope.length; };
+    var addScope = function(s){ scope.push(s); };
+    var findScopeDefs = function(){
+        if(!inScope()){
+            return keyMap;
+        }
+
+        var currentDefs = keyMap;
+        for(i = 0; i < scope.length; i++){
+            currentDefs = currentDefs[scope[i]];
+        }
+
+        return currentDefs;
+    };
+
+    // == DEBUG functions ==
+    this.defs = function(){ return keyMap; };
+    this.showScope = function(){ console.log(scope); };
+
+
+    // Find function to call for a given key
+    // Returns a function mapped to the given key. If the key is mapped
+    // to an object literal, the function returned adds the key to the
+    // current scope listing.
+    this.find = function(eventKey){
+        var defs = findScopeDefs();
+        fnOrObj = defs[eventKey];
+
+        if(typeof fnOrObj === "object"){
+            return setScopeFn(eventKey);
         }
         else {
-            return KeyTranslator.lowerCase[code];
+            this.resetScope();
+            return fnOrObj;
         }
-    },
+    };
 
-    // Return an array of modifier keys
-    modifierKeys: function(e){
-        var modifiers = [];
-        // Ordering of modifiers is important
-        if(e.altKey){
-            modifiers.push("M");
-        }
-        if(e.ctrlKey){
-            modifiers.push("C");
-        }
-        if(e.metaKey){
-            modifiers.push("D");
-        }
-        return modifiers;
-    },
+    // Used to build a closure that
+    var setScopeFn = function(k){
+        return (function(){ addScope(k); });
+    };
+
+    // Define key to actions.
+    this.define = function(definition){
+        keyMap = definition;
+    };
+
+    // Reset the scope listing.
+    this.resetScope = function(){
+        scope = [];
+    }
+};
+
+// Key Translator
+SweetKeys.Translator = {
     translate: function(e){
         var key;
+        var isModifierPressed = function(e){
+            // 13 = enter
+            return (e.metaKey || e.ctrlKey || e.altKey || (e.keyCode === 13));
+        };
 
-        key = KeyTranslator.codeToKey(e.keyCode, e.shiftKey);
-        if(KeyTranslator.isModifierPressed(e)){
-           var modifiers = KeyTranslator.modifierKeys(e);
+        var codeToKey = function(code, shift){
+            if(shift){
+                return SweetKeys.Translator.upperCase[code];
+            }
+            else {
+                return SweetKeys.Translator.lowerCase[code];
+            }
+        };
+
+        // Return an array of modifier keys
+        // M = meta/alt key
+        // C = ctrl key
+        // D = command (apple) key
+        var modifierKeys = function(e){
+            var modifiers = [];
+            // Ordering of modifiers is important
+            if(e.altKey){
+                modifiers.push("M");
+            }
+            if(e.ctrlKey){
+                modifiers.push("C");
+            }
+            if(e.metaKey){
+                modifiers.push("D");
+            }
+            return modifiers;
+        };
+
+        key = codeToKey(e.keyCode, e.shiftKey);
+        if(isModifierPressed(e)){
+           var modifiers = modifierKeys(e);
            modifiers.push(key);
            key = "<" + modifiers.join("-") + ">";
         }
@@ -99,4 +162,6 @@ var KeyTranslator = {
         89: "y",
         90: "z",
     },
+
 };
+
