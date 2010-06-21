@@ -1,5 +1,7 @@
 var SweetKeys = function(){
-    var keyMap = {};
+    var contexts = {global: {}};
+    var curContext = contexts["global"];
+    // var keyMap = {};
     var scope = [];
 
     // == Private functions ==
@@ -7,10 +9,10 @@ var SweetKeys = function(){
     var addScope = function(s){ scope.push(s); };
     var findScopeDefs = function(){
         if(!inScope()){
-            return keyMap;
+            return curContext;
         }
 
-        var currentDefs = keyMap;
+        var currentDefs = curContext;
         for(i = 0; i < scope.length; i++){
             currentDefs = currentDefs[scope[i]];
         }
@@ -19,7 +21,7 @@ var SweetKeys = function(){
     };
 
     // == DEBUG functions ==
-    this.defs = function(){ return keyMap; };
+    this.defs = function(){ console.log(curContext); return contexts; };
     this.showScope = function(){ console.log(scope); };
 
 
@@ -46,13 +48,36 @@ var SweetKeys = function(){
     };
 
     // Define key to actions.
-    this.define = function(definition){
-        keyMap = definition;
+    this.define = function(context, definition){
+        if(typeof context === "string"){
+            // contexts[context] = definition;
+            contexts[context] = {}
+            mergeObjects(contexts[context], definition);
+            console.log("context " + context);
+            console.log(contexts[context]);
+        }
+        else {
+            mergeObjects(contexts["global"], context);
+        }
+    };
+
+    var mergeObjects = function(obj1, obj2){
+        for(key in obj2){
+            obj1[key] = obj2[key];
+        }
     };
 
     // Reset the scope listing.
     this.resetScope = function(){
         scope = [];
+    }
+
+    this.setContext = function(context){
+        curContext = contexts[context];
+    }
+
+    this.resetContext = function(){
+        curContext = contexts["global"];
     }
 };
 
@@ -61,8 +86,11 @@ SweetKeys.Translator = {
     translate: function(e){
         var key;
         var isModifierPressed = function(e){
-            // 13 = enter
-            return (e.metaKey || e.ctrlKey || e.altKey || (e.keyCode === 13));
+            return (e.metaKey ||
+                    e.ctrlKey ||
+                    e.altKey ||
+                    (e.keyCode === 13) || // Enter key
+                    (e.keyCode === 27));  // Esc key
         };
 
         var codeToKey = function(code, shift){
@@ -133,6 +161,7 @@ SweetKeys.Translator = {
         90: "Z",
     },
     lowerCase: {
+        27: "Esc",
         13: "CR",
         191: "/",
         65: "a",

@@ -33,16 +33,27 @@ module QueryDB
 
     get "/" do
       @title = "Query DB"
+      load_tables
       mustache :index
     end
 
     post "/query" do
       begin
+        puts params[:sql]
         @results = QueryDB.db.query(params[:sql])
         mustache :query
       rescue Mysql::Error => e
         halt 400, e.message
       end
     end
+
+    protected
+      def load_tables
+        results = tables = QueryDB.db.query(%[SHOW TABLES])
+        @tables = []
+        results.each do |row|
+          @tables << row.first
+        end
+      end
   end
 end

@@ -1,4 +1,16 @@
 
+<div id="tables" class="clearfix">
+  <div id="table-filter">
+    <label>Filter</label>
+    <input type="text" name="filter" id="filter" />
+  </div>
+  <ul class="clearfix">
+  {{#tables}}
+    <li>{{to_s}}</li>
+  {{/tables}}
+  </ul>
+</div>
+
 <div id="query" class="clearfix">
   <form action="/query" method="get">
     <textarea name="sql" id="sql"></textarea>

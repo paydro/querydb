@@ -53,10 +53,12 @@ QueryBuilder = {
 }
 
 var sweetKeys = new SweetKeys();
+// Global context
 sweetKeys.define({
     // Focus on query textarea
     "/": function(event){
         $("#query form textarea").focus(); event.preventDefault();
+        sweetKeys.setContext("query");
     },
 
     // History navigation
@@ -73,11 +75,11 @@ sweetKeys.define({
     "j": function(){ Navigator.moveDown(); },
     "k": function(){ Navigator.moveUp(); },
     "g": {
-        "g": {
-            "t": function(){ console.log("gtt pressed"); },
-            "g": function(){ console.log("ggg pressed"); },
+        "t": function(e){
+            $("#tables input[name=filter]").focus();
+            sweetKeys.setContext("tables");
+            e.preventDefault();
         },
-        "t": function(e){ console.log("gt pressed"); },
     },
 
     // Go to parent table for foreign key
@@ -86,6 +88,27 @@ sweetKeys.define({
     },
 });
 
+sweetKeys.define("tables", {
+    "<Esc>": function(){
+        $("#tables input[name=filter]").blur();
+        sweetKeys.setContext("global");
+    },
+    "<CR>": function(e){
+        // TODO: Temporary. Make <CR> run the query on the selected table
+        var txt = $("#filter").blur().val();
+        $("#query form #sql").text("SELECT * FROM " + txt + " LIMIT 100");
+        $("#query form").submit();
+        sweetKeys.resetContext();
+        e.preventDefault();
+    }
+});
+
+sweetKeys.define("query", {
+    "<Esc>": function(){
+        $("#sql").blur();
+        sweetKeys.resetContext();
+    },
+});
 
 // ***************
 // Onload function
@@ -126,14 +149,8 @@ $(function(){
     // Focus on query box with "/"
     // TODO: Move this function into SweetKeys
     $("body").live("keydown", function(e){
-        if(e.keyCode == 27){
-            sweetKeys.resetScope();
-        }
-        if(e.target.nodeName.toLowerCase() == "textarea"){
-            return; // Do nothing when inside the textarea
-        }
-
         keyLogger(e);
+
         // TODO: Remove this conditional when all keys are mapped
         var eventKey = SweetKeys.Translator.translate(e);
         if(typeof eventKey !== "undefined"){
@@ -173,6 +190,13 @@ $(function(){
                 $("#results").html(response.responseText);
             }
         });
+    });
+
+    $("#tables li").live("click", function(){
+        var table = $(this).text().trim();
+        $("#query form #sql").text("SELECT * FROM " + table + " LIMIT 100");
+        $("#query form").submit();
+        return false;
     });
 
     if(window.location.hash){

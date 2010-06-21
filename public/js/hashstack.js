@@ -2,13 +2,12 @@
 var HashStack = function(){
     // Array of hashes
     var stack = [];
+    var mruStack = [];
     var pointer = 0;
 
     // Load up stack
     stack = QueryStore.findAll();
 
-    // Point to 1 past the last so that on page load
-    // a user can hit previous and get the last query
     if(stack.length) {
         pointer = stack.length;
     }

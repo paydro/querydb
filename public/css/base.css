@@ -36,6 +36,14 @@ body {
     overflow-x: auto;
 }
 
+/* Query Box
+ **********************/
+
+#query {
+  float: left;
+  width: 550px;
+}
+
 #query textarea {
   width: 100%;
   height: 150px;
@@ -49,6 +57,38 @@ body {
 }
 #query input[type=submit] {
     float: right;
+}
+
+/* Tables
+ *********************/
+
+#tables {
+  width: 400px;
+  height: 170px;
+  float: left;
+}
+
+#tables ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: scroll;
+  height: 150px;
+}
+
+#tables ul li {
+  padding: 5px 10px;
+  margin: 0;
+  cursor: pointer;
+}
+#tables ul li:hover {
+  background-color: #aaa;
+}
+
+/* Results
+ *********************/
+#results {
+  clear: both;
 }
 
 #results table {
