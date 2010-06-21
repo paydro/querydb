@@ -110,7 +110,6 @@ sweetKeys.define("query", {
     },
     "<D-CR>": function(){
         $("#query form").submit();
-        sweetKeys.resetContext();
     },
 });
 

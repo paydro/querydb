@@ -39,7 +39,6 @@ module QueryDB
 
     post "/query" do
       begin
-        puts params[:sql]
         @results = QueryDB.db.query(params[:sql])
         mustache :query
       rescue Mysql::Error => e
