@@ -90,7 +90,9 @@ SweetKeys.Translator = {
                     e.ctrlKey ||
                     e.altKey ||
                     (e.keyCode === 13) || // Enter key
-                    (e.keyCode === 27));  // Esc key
+                    (e.keyCode === 27) || // Esc Key
+                    (e.keyCode >= 37 && e.keyCode <= 40) // Arrow Keys
+                   );
         };
 
         var codeToKey = function(code, shift){
@@ -163,6 +165,10 @@ SweetKeys.Translator = {
     lowerCase: {
         27: "Esc",
         13: "CR",
+        37: "A-LEFT",
+        38: "A-UP",
+        39: "A-RIGHT",
+        40: "A-DOWN",
         191: "/",
         65: "a",
         66: "b",
