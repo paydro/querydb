@@ -108,6 +108,10 @@ sweetKeys.define("query", {
         $("#sql").blur();
         sweetKeys.resetContext();
     },
+    "<D-CR>": function(){
+        $("#query form").submit();
+        sweetKeys.resetContext();
+    },
 });
 
 // ***************
@@ -129,13 +133,6 @@ $(function(){
     $("#query button").live("click", function(){
         hashes.clear();
         return false;
-    });
-
-    // Apple + Enter to query
-    $("#query form").live("keydown", function(e){
-        if(e.keyCode == 13 && e.metaKey){
-            $("#query").trigger("query");
-        }
     });
 
     // ESC inside query box leaves focus - i.e., blur
@@ -185,6 +182,8 @@ $(function(){
                 // Allow for movement!
                 $("#results td:first").addClass("selected");
                 Scroller.scrollToStart();
+                // Put context back on the results after a query executes
+                sweetKeys.resetContext();
             },
             error: function(response){
                 $("#results").html(response.responseText);
