@@ -7,7 +7,6 @@ TODO:
   i.e., enter on a primary key should allow you to select a foreign
   key table
 * Allow full screen mode
-* Allow for filterable tables area
 * Use <C-]> to move between foreign key fields
 * Add object to handle the results/query/tables objects:
   * Results table
@@ -16,8 +15,13 @@ TODO:
   * Query etc
 * SweetKeys contexts => go with binding on inputs/textareas or using
   namespaces as currently.
-* Returning false inside a key combination should return false from the bind event (stop propagation)
+* Returning false inside a key combination should return false from the
+  bind event (stop propagation)
+* Add QUnit for sweetkeys
+
+NAMING:
 * Better name for SweetKeys. KCombinator. KeyLock?
+* sweetKeys.trigger()
 
 NICE:
 
