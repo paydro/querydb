@@ -9,10 +9,10 @@ var SweetKeys = function(){
     var addScope = function(s){ scope.push(s); };
     var findScopeDefs = function(){
         if(!inScope()){
-            return curContext;
+            return contexts[curContext];
         }
 
-        var currentDefs = curContext;
+        var currentDefs = contexts[curContext];
         for(i = 0; i < scope.length; i++){
             currentDefs = currentDefs[scope[i]];
         }
@@ -25,10 +25,27 @@ var SweetKeys = function(){
     this.showScope = function(){ console.log(scope); };
 
 
+    this.findFunc = function(event){
+        var eventKey = SweetKeys.Translator.translate(event);
+        console.log("Finding fn for: " + eventKey);
+        if(typeof eventKey !== "undefined"){
+            var fn = this.find(eventKey);
+            return fn;
+        }
+        return undefined;
+    };
+
+    // TODO: need better name
+    this.trigger = function(event){
+        var fn = this.findFunc(event);
+        if(fn){ console.log("fn found:"); console.log(fn); fn(event); }
+    };
+
     // Find function to call for a given key
     // Returns a function mapped to the given key. If the key is mapped
     // to an object literal, the function returned adds the key to the
     // current scope listing.
+    // TODO: Make this private?
     this.find = function(eventKey){
         var defs = findScopeDefs();
         fnOrObj = defs[eventKey];
@@ -53,8 +70,6 @@ var SweetKeys = function(){
             // contexts[context] = definition;
             contexts[context] = {}
             mergeObjects(contexts[context], definition);
-            console.log("context " + context);
-            console.log(contexts[context]);
         }
         else {
             mergeObjects(contexts["global"], context);
@@ -70,15 +85,19 @@ var SweetKeys = function(){
     // Reset the scope listing.
     this.resetScope = function(){
         scope = [];
-    }
+    };
 
     this.setContext = function(context){
-        curContext = contexts[context];
-    }
+        curContext = context;
+    };
 
     this.resetContext = function(){
-        curContext = contexts["global"];
-    }
+        curContext = "global";
+    };
+
+    this.isGlobalContext = function(){
+        return curContext === "global";
+    };
 };
 
 // Key Translator

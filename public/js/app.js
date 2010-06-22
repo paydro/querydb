@@ -33,6 +33,8 @@ var QueryStore = {
 
 };
 
+
+
 QueryBuilder = {
     columnName: function(element){
         var headerIndex = $(element).index() + 1;
@@ -57,7 +59,8 @@ var sweetKeys = new SweetKeys();
 sweetKeys.define({
     // Focus on query textarea
     "/": function(event){
-        $("#query form textarea").focus(); event.preventDefault();
+        $("#query form textarea").focus().select();
+        event.preventDefault();
         sweetKeys.setContext("query");
     },
 
@@ -74,9 +77,11 @@ sweetKeys.define({
     "l": function(){ Navigator.moveRight(); },
     "j": function(){ Navigator.moveDown(); },
     "k": function(){ Navigator.moveUp(); },
+
+    // Focus on the tables pane
     "g": {
         "t": function(e){
-            $("#tables input[name=filter]").focus();
+            $("#tables input[name=filter]").focus().select();
             sweetKeys.setContext("tables");
             e.preventDefault();
         },
@@ -91,16 +96,33 @@ sweetKeys.define({
 sweetKeys.define("tables", {
     "<Esc>": function(){
         $("#tables input[name=filter]").blur();
-        sweetKeys.setContext("global");
+        sweetKeys.resetContext();
     },
     "<CR>": function(e){
         // TODO: Temporary. Make <CR> run the query on the selected table
-        var txt = $("#filter").blur().val();
+        var txt = $("#tables li.selected").text().trim();
+        $("#filter").blur();
         $("#query form #sql").text("SELECT * FROM " + txt + " LIMIT 100");
         $("#query form").submit();
-        sweetKeys.resetContext();
         e.preventDefault();
-    }
+    },
+    "<A-DOWN>": function(e){
+        var selected = $("#tables ul li.selected")
+        var next = selected.nextAll("li:visible:first");
+        if(next.length){
+           selected.removeClass("selected");
+           next.addClass("selected");
+        }
+        e.preventDefault();
+    },
+    "<A-UP>": function(e){
+        var selected = $("#tables ul li.selected")
+        var prev = selected.prevAll("li:visible:first");
+        if(prev.length){
+           selected.removeClass("selected");
+           prev.addClass("selected");
+        }
+    },
 });
 
 sweetKeys.define("query", {
@@ -113,14 +135,64 @@ sweetKeys.define("query", {
     },
 });
 
+
+jQuery.fn.liveUpdate = function(list){
+  list = jQuery(list);
+  if (list.length) {
+      console.log("here");
+    var rows = list.children('li'),
+      cache = rows.map(function(){
+        return this.innerHTML.toLowerCase();
+      });
+
+    // Note filter happens on key up since we want the character
+    // to be inserted before running the filter
+    this.live("keyup", function(e){
+        var fn = sweetKeys.findFunc(e);
+        if(typeof fn !== "undefined"){
+            console.log("do stuff");
+            e.preventDefault();
+        }
+        else {
+            filter.apply(this);
+            console.log("do normal thing");
+        }
+    }).keyup();
+  }
+
+  return this;
+
+  function filter(){
+    var term = jQuery.trim(jQuery(this).val().toLowerCase()), scores = [];
+
+    rows.removeClass("selected");
+
+    if (!term) {
+      rows.show();
+    } else {
+      rows.hide();
+
+      cache.each(function(i){
+        var score = this.score(term);
+        if (score > 0) { scores.push([score, i]); }
+      });
+
+      jQuery.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
+        jQuery(rows[ this[1] ]).show();
+      });
+    }
+
+    rows.filter(":visible:first").addClass("selected");
+  }
+};
+
 // ***************
 // Onload function
 // ***************
 $(function(){
     hashes = new HashStack();
 
-    // Make the body the focus on load to allow for keyboard interaction
-    $("#results").focus();
+    $("#filter").liveUpdate($("#tables ul"));
 
     // Form submit
     $("#query form").live("submit", function(){
@@ -134,29 +206,32 @@ $(function(){
         return false;
     });
 
-    // ESC inside query box leaves focus - i.e., blur
+    // Query box focusing/keys
     $("#query form textarea").live("keydown", function(e){
-        if(e.keyCode == 27){
-            $(this).blur();
-            e.preventDefault();
+        sweetKeys.trigger(e);
+    }).live("focus", function(){
+        sweetKeys.setContext("query");
+    });
+
+    // TODO: This is very global. All keys pressed get run. Maybe
+    // reduce the scope?
+    $("body").live("keydown", function(e){
+        keyLogger(e);
+        if(sweetKeys.isGlobalContext()){
+            console.log("global context executing");
+            sweetKeys.trigger(e);
         }
     });
 
-    // Focus on query box with "/"
-    // TODO: Move this function into SweetKeys
-    $("body").live("keydown", function(e){
-        keyLogger(e);
-
-        // TODO: Remove this conditional when all keys are mapped
-        var eventKey = SweetKeys.Translator.translate(e);
-        if(typeof eventKey !== "undefined"){
-            var fn = sweetKeys.find(eventKey);
-            if(typeof fn !== "undefined"){ fn(e); }
-        }
+    $("#filter").live("keydown", function(e){
+        sweetKeys.trigger(e);
+    }).live("click", function(e){
+        sweetKeys.setContext("tables");
     });
 
     $("#results td").live("click", function(){
         Navigator.moveTo($(this));
+        sweetKeys.resetContext();
     });
 
     // Runs a new query
