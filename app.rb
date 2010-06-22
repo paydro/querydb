@@ -14,7 +14,8 @@ module QueryDB
         config["host"],
         config["user"],
         config["password"],
-        config["database"]
+        config["database"],
+        config["port"]
       )
     end
     @db
