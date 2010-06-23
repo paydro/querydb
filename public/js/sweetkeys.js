@@ -36,9 +36,12 @@ var SweetKeys = function(){
     };
 
     // TODO: need better name
+    // Return the value of the function. This allows stopping the bubbling
+    // of an event if the event handler returns this value as well.
     this.trigger = function(event){
         var fn = this.findFunc(event);
-        if(fn){ console.log("fn found:"); console.log(fn); fn(event); }
+        if(fn){ return fn(event); }
+        return true;
     };
 
     // Find function to call for a given key

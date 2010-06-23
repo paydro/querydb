@@ -207,7 +207,7 @@ $(function(){
 
     // Query box focusing/keys
     $("#query form textarea").live("keydown", function(e){
-        sweetKeys.trigger(e);
+        return sweetKeys.trigger(e);
     }).live("focus", function(){
         sweetKeys.setContext("query");
     });
@@ -215,15 +215,16 @@ $(function(){
     // TODO: This is very global. All keys pressed get run. Maybe
     // reduce the scope?
     $("body").live("keydown", function(e){
+        return sweetKeys.trigger(e);
         keyLogger(e);
         if(sweetKeys.isGlobalContext()){
             console.log("global context executing");
-            sweetKeys.trigger(e);
+            return sweetKeys.trigger(e);
         }
     });
 
     $("#filter").live("keydown", function(e){
-        sweetKeys.trigger(e);
+        return sweetKeys.trigger(e);
     }).live("click", function(e){
         sweetKeys.setContext("tables");
     });
@@ -260,6 +261,7 @@ $(function(){
             },
             error: function(response){
                 $("#results").html(response.responseText);
+                sweetKeys.resetContext();
             }
         });
     });
