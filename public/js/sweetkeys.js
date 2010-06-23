@@ -1,6 +1,6 @@
 var SweetKeys = function(){
     var contexts = {global: {}};
-    var curContext = contexts["global"];
+    var curContext = "global";
     // var keyMap = {};
     var scope = [];
 

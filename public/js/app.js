@@ -30,7 +30,6 @@ var QueryStore = {
     clear: function(){
         localStorage.clear();
     },
-
 };
 
 
