@@ -1,18 +1,17 @@
-var SweetKeys = function(){
-    var contexts = {global: {}};
-    var curContext = "global";
-    // var keyMap = {};
+var KeyLock = function(){
+    var keyMap = {};
     var scope = [];
 
     // == Private functions ==
     var inScope = function(){ return scope.length; };
     var addScope = function(s){ scope.push(s); };
+    var resetScope = function(){ scope = []; };
     var findScopeDefs = function(){
         if(!inScope()){
-            return contexts[curContext];
+            return keyMap;
         }
 
-        var currentDefs = contexts[curContext];
+        var currentDefs = keyMap;
         for(i = 0; i < scope.length; i++){
             currentDefs = currentDefs[scope[i]];
         }
@@ -20,16 +19,41 @@ var SweetKeys = function(){
         return currentDefs;
     };
 
-    // == DEBUG functions ==
-    this.defs = function(){ console.log(curContext); return contexts; };
-    this.showScope = function(){ console.log(scope); };
+    // Find function to call for a given key
+    // Returns a function mapped to the given key. If the key is mapped
+    // to an object literal, the function returned adds the key to the
+    // current scope listing.
+    var find = function(eventKey){
+        var defs = findScopeDefs();
+        fnOrObj = defs[eventKey];
 
+        if(typeof fnOrObj === "object"){
+            return setScopeFunc(eventKey);
+        }
+        else {
+            resetScope();
+            return fnOrObj;
+        }
+    };
+
+    // Used to build a closure that sets scope
+    var setScopeFunc = function(k){
+        return (function(){ addScope(k); });
+    };
+
+
+    // == DEBUG functions ==
+    this.debug = function(){
+        console.log("Key Mappings: ");
+        console.log(keyMap);
+        console.log("Scope: ");
+        console.log(scope);
+    };
 
     this.findFunc = function(event){
-        var eventKey = SweetKeys.Translator.translate(event);
-        console.log("Finding fn for: " + eventKey);
+        var eventKey = KeyLock.Translator.translate(event);
         if(typeof eventKey !== "undefined"){
-            var fn = this.find(eventKey);
+            var fn = find(eventKey);
             return fn;
         }
         return undefined;
@@ -44,67 +68,21 @@ var SweetKeys = function(){
         return true;
     };
 
-    // Find function to call for a given key
-    // Returns a function mapped to the given key. If the key is mapped
-    // to an object literal, the function returned adds the key to the
-    // current scope listing.
-    // TODO: Make this private?
-    this.find = function(eventKey){
-        var defs = findScopeDefs();
-        fnOrObj = defs[eventKey];
-
-        if(typeof fnOrObj === "object"){
-            return setScopeFn(eventKey);
-        }
-        else {
-            this.resetScope();
-            return fnOrObj;
-        }
-    };
-
-    // Used to build a closure that
-    var setScopeFn = function(k){
-        return (function(){ addScope(k); });
-    };
-
-    // Define key to actions.
-    this.define = function(context, definition){
-        if(typeof context === "string"){
-            // contexts[context] = definition;
-            contexts[context] = {}
-            mergeObjects(contexts[context], definition);
-        }
-        else {
-            mergeObjects(contexts["global"], context);
-        }
-    };
-
-    var mergeObjects = function(obj1, obj2){
-        for(key in obj2){
-            obj1[key] = obj2[key];
+    // Define key(s) to actions.
+    this.define = function(definition){
+        for(key in definition){
+            keyMap[key] = definition[key];
         }
     };
 
     // Reset the scope listing.
     this.resetScope = function(){
-        scope = [];
-    };
-
-    this.setContext = function(context){
-        curContext = context;
-    };
-
-    this.resetContext = function(){
-        curContext = "global";
-    };
-
-    this.isGlobalContext = function(){
-        return curContext === "global";
+        resetScope();
     };
 };
 
 // Key Translator
-SweetKeys.Translator = {
+KeyLock.Translator = {
     translate: function(e){
         var key;
         var isModifierPressed = function(e){
@@ -119,10 +97,10 @@ SweetKeys.Translator = {
 
         var codeToKey = function(code, shift){
             if(shift){
-                return SweetKeys.Translator.upperCase[code];
+                return KeyLock.Translator.upperCase[code];
             }
             else {
-                return SweetKeys.Translator.lowerCase[code];
+                return KeyLock.Translator.lowerCase[code];
             }
         };
 

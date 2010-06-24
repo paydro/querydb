@@ -53,136 +53,78 @@ QueryBuilder = {
     },
 }
 
-var sweetKeys = new SweetKeys();
-// Global context
-sweetKeys.define({
-    // Focus on query textarea
-    "/": function(event){
-        $("#query form textarea").focus().select();
-        event.preventDefault();
-        sweetKeys.setContext("query");
-    },
+// **************
+// jQuery Plugins
+// **************
 
-    // History navigation
-    "n": function(){ window.location.hash = hashes.next() },
-    "p": function(){ window.location.hash = hashes.prev() },
+// Helper for KeyLock.
+$.fn.keyLock = function(keyDefinition){
+    // Define keys if we have some definition
+    if(keyDefinition){
+        var keys = new KeyLock();
+        keys.define(keyDefinition);
+        this.data("keyLock", keys);
+        this.live("keydown", function(e){
+            console.log(keys);
+            console.log(keys.defs());
+            return keys.trigger(e);
+        });
 
-    // Table navigation
-    // TODO: Change so that I don't have to create a function here,
-    // but just give it the function name - i.e., Navigator.moveLeft.
-    // Navigator is using "this" and when not inside a function like below,
-    // this means the element. FAIL.
-    "h": function(){ Navigator.moveLeft(); },
-    "l": function(){ Navigator.moveRight(); },
-    "j": function(){ Navigator.moveDown(); },
-    "k": function(){ Navigator.moveUp(); },
+        return this;
+    }
+    else { // Return the KeyLock instance
+        return this.data("keyLock");
+    }
+};
 
-    // Focus on the tables pane
-    "g": {
-        "t": function(e){
-            $("#tables input[name=filter]").focus().select();
-            sweetKeys.setContext("tables");
-            e.preventDefault();
-        },
-    },
+$.fn.liveUpdate = function(list){
+    list = $(list);
+    if (list.length) {
+        var rows = list.children('li'),
+        cache = rows.map(function(){
+            return this.innerHTML.toLowerCase();
+        });
 
-    // Go to parent table for foreign key
-    "<CR>": function(){
-        QueryBuilder.findParentRecord($("#results .selected"));
-    },
-});
+        // Note filter happens on key up since we want the character
+        // to be inserted before running the filter
+        this.live("keyup", function(e){
+            var fn = $(this).keyLock().findFunc(e);
+            if(typeof fn === "undefined"){
 
-sweetKeys.define("tables", {
-    "<Esc>": function(){
-        $("#tables input[name=filter]").blur();
-        sweetKeys.resetContext();
-    },
-    "<CR>": function(e){
-        // TODO: Temporary. Make <CR> run the query on the selected table
-        var txt = $("#tables li.selected").text().trim();
-        $("#filter").blur();
-        $("#query form #sql").text("SELECT * FROM " + txt + " LIMIT 100");
-        $("#query form").submit();
-        e.preventDefault();
-    },
-    "<A-DOWN>": function(e){
-        var selected = $("#tables ul li.selected")
-        var next = selected.nextAll("li:visible:first");
-        if(next.length){
-           selected.removeClass("selected");
-           next.addClass("selected");
-        }
-        e.preventDefault();
-    },
-    "<A-UP>": function(e){
-        var selected = $("#tables ul li.selected")
-        var prev = selected.prevAll("li:visible:first");
-        if(prev.length){
-           selected.removeClass("selected");
-           prev.addClass("selected");
-        }
-    },
-});
-
-sweetKeys.define("query", {
-    "<Esc>": function(){
-        $("#sql").blur();
-        sweetKeys.resetContext();
-    },
-    "<D-CR>": function(){
-        $("#query form").submit();
-    },
-});
-
-
-jQuery.fn.liveUpdate = function(list){
-  list = jQuery(list);
-  if (list.length) {
-      console.log("here");
-    var rows = list.children('li'),
-      cache = rows.map(function(){
-        return this.innerHTML.toLowerCase();
-      });
-
-    // Note filter happens on key up since we want the character
-    // to be inserted before running the filter
-    this.live("keyup", function(e){
-        var fn = sweetKeys.findFunc(e);
-        if(typeof fn !== "undefined"){
-            console.log("do stuff");
-            e.preventDefault();
-        }
-        else {
-            filter.apply(this);
-            console.log("do normal thing");
-        }
-    }).keyup();
-  }
-
-  return this;
-
-  function filter(){
-    var term = jQuery.trim(jQuery(this).val().toLowerCase()), scores = [];
-
-    rows.removeClass("selected");
-
-    if (!term) {
-      rows.show();
-    } else {
-      rows.hide();
-
-      cache.each(function(i){
-        var score = this.score(term);
-        if (score > 0) { scores.push([score, i]); }
-      });
-
-      jQuery.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
-        jQuery(rows[ this[1] ]).show();
-      });
+                filter.apply(this);
+                // Something happened in the keydown event, so don't let this
+                // event run
+                // return false;
+            }
+            // else {
+            // }
+        }).keyup();
     }
 
-    rows.filter(":visible:first").addClass("selected");
-  }
+    return this;
+
+    function filter(){
+        var term = $.trim($(this).val().toLowerCase()), scores = [];
+
+        rows.removeClass("selected");
+
+        if (!term) {
+            rows.show();
+        } else {
+            rows.hide();
+
+            cache.each(function(i){
+                var score = this.score(term);
+                if (score > 0) { scores.push([score, i]); }
+            });
+
+            $.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
+                $(rows[ this[1] ]).show();
+            });
+        }
+
+        rows.filter(":visible:first").addClass("selected");
+    }
 };
 
 // ***************
@@ -191,7 +133,6 @@ jQuery.fn.liveUpdate = function(list){
 $(function(){
     hashes = new HashStack();
 
-    $("#filter").liveUpdate($("#tables ul"));
 
     // Form submit
     $("#query form").live("submit", function(){
@@ -205,33 +146,91 @@ $(function(){
         return false;
     });
 
-    // Query box focusing/keys
-    $("#query form textarea").live("keydown", function(e){
-        return sweetKeys.trigger(e);
-    }).live("focus", function(){
-        sweetKeys.setContext("query");
+
+    $("#query form textarea").keyLock({
+        "<Esc>": function(){
+            $("#sql").blur();
+            return false;
+        },
+        "<D-CR>": function(){
+            $("#query form").submit();
+            return false;
+        },
     });
 
-    // TODO: This is very global. All keys pressed get run. Maybe
-    // reduce the scope?
-    $("body").live("keydown", function(e){
-        return sweetKeys.trigger(e);
-        keyLogger(e);
-        if(sweetKeys.isGlobalContext()){
-            console.log("global context executing");
-            return sweetKeys.trigger(e);
-        }
+    $("body").keyLock({
+        // Focus on query textarea
+        "/": function(event){
+            $("#query form textarea").focus().select();
+            event.preventDefault();
+        },
+
+        // History navigation
+        "n": function(){ window.location.hash = hashes.next() },
+        "p": function(){ window.location.hash = hashes.prev() },
+
+        // Table navigation
+        // TODO: Change so that I don't have to create a function here,
+        // but just give it the function name - i.e., Navigator.moveLeft.
+        // Navigator is using "this" and when not inside a function like below,
+        // this means the element. FAIL.
+        "h": function(){ Navigator.moveLeft(); },
+        "l": function(){ Navigator.moveRight(); },
+        "j": function(){ Navigator.moveDown(); },
+        "k": function(){ Navigator.moveUp(); },
+
+        // Focus on the tables pane
+        "g": {
+            "t": function(e){
+                $("#tables input[name=filter]").focus().select();
+                e.preventDefault();
+            },
+        },
+
+        // Go to parent table for foreign key
+        "<CR>": function(){
+            QueryBuilder.findParentRecord($("#results .selected"));
+        },
     });
 
-    $("#filter").live("keydown", function(e){
-        return sweetKeys.trigger(e);
-    }).live("click", function(e){
-        sweetKeys.setContext("tables");
+    $("#filter").keyLock({
+        "<Esc>": function(){
+            $("#tables input[name=filter]").blur();
+            return false;
+        },
+        "<CR>": function(e){
+            // TODO: Temporary. Make <CR> run the query on the selected table
+            var txt = $("#tables li.selected").text().trim();
+            $("#filter").blur();
+            $("#query form #sql").text("SELECT * FROM " + txt + " LIMIT 100");
+            $("#query form").submit();
+            return false;
+        },
+        "<A-DOWN>": function(e){
+            var selected = $("#tables ul li.selected")
+            var next = selected.nextAll("li:visible:first");
+            if(next.length){
+                selected.removeClass("selected");
+                next.addClass("selected");
+            }
+            return false;
+        },
+        "<A-UP>": function(e){
+            var selected = $("#tables ul li.selected")
+            var prev = selected.prevAll("li:visible:first");
+            if(prev.length){
+                selected.removeClass("selected");
+                prev.addClass("selected");
+            }
+            return false;
+        },
     });
+
+    // Needs to go after the key definition
+    $("#filter").liveUpdate($("#tables ul"));
 
     $("#results td").live("click", function(){
         Navigator.moveTo($(this));
-        sweetKeys.resetContext();
     });
 
     // Runs a new query
@@ -256,12 +255,9 @@ $(function(){
                 // Allow for movement!
                 $("#results td:first").addClass("selected");
                 Scroller.scrollToStart();
-                // Put context back on the results after a query executes
-                sweetKeys.resetContext();
             },
             error: function(response){
                 $("#results").html(response.responseText);
-                sweetKeys.resetContext();
             }
         });
     });
