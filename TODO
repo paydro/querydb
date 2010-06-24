@@ -8,11 +8,6 @@ TODO:
   key table
 * Allow full screen mode
 * Use <C-]> to move between foreign key fields
-* Add object to handle the results/query/tables objects:
-  * Results table
-  * Results selected
-  * Tables selected
-  * Query etc
 * Move in blocks of 5 up and down with CTRL + D and CTRL + U
 * Move to end of row with $ and beginning with 0 or ^
 

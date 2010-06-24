@@ -14,9 +14,11 @@ var QDB = {
         table: function(){ return $("#results") }
     },
     TableFilter: {
+        input: function(){ return $("#filter"); },
         selected: function(){ return $("#tables li.selected"); }
     },
     Query: {
+        form: function() { return $("#query form"); },
         box: function(){ return $("#sql"); }
     }
 };
@@ -60,8 +62,8 @@ var QueryBuilder = {
         var query = "SELECT * \n" +
                     "FROM " + this.tableize(header) + "\n" +
                     "WHERE id = " + element.text().trim();
-        $("form textarea").text(query);
-        $("#query form").submit();
+        QDB.Query.box().text(query);
+        QDB.Query.form().submit();
     },
 }
 
@@ -73,7 +75,7 @@ $(function(){
     QDB.hashes = new HashStack();
 
     // Form submit
-    $("#query form").live("submit", function(){
+    QDB.Query.form().live("submit", function(){
         $("#query").trigger("query");
         return false;
     });
@@ -85,9 +87,9 @@ $(function(){
     });
 
 
-    $("#query form textarea").keyLock({
+    QDB.Query.box().keyLock({
         "<Esc>": function(){
-            $("#sql").blur();
+            QDB.Query.box().blur();
             return false;
         },
         "<D-CR>": function(){
@@ -121,32 +123,32 @@ $(function(){
         // Focus on the tables pane
         "g": {
             "t": function(e){
-                $("#tables input[name=filter]").focus().select();
+                QDB.TableFilter.input().focus().select();
                 e.preventDefault();
             },
         },
 
         // Go to parent table for foreign key
         "<CR>": function(){
-            QueryBuilder.findParentRecord($("#results .selected"));
+            QueryBuilder.findParentRecord(QDB.Results.selected());
         },
-    }, true);
+    });
 
-    $("#filter").keyLock({
+    QDB.TableFilter.input().keyLock({
         "<Esc>": function(){
-            $("#tables input[name=filter]").blur();
+            QDB.TableFilter.input().blur();
             return false;
         },
         "<CR>": function(e){
             // TODO: Temporary. Make <CR> run the query on the selected table
-            var txt = $("#tables li.selected").text().trim();
-            $("#filter").blur();
-            $("#query form #sql").text("SELECT * FROM " + txt + " LIMIT 100");
-            $("#query form").submit();
+            var txt = QDB.TableFilter.selected().text().trim();
+            QDB.TableFilter.input().blur();
+            QDB.Query.box().text("SELECT * FROM " + txt + " LIMIT 100");
+            QDB.Query.form().submit();
             return false;
         },
         "<A-DOWN>": function(e){
-            var selected = $("#tables ul li.selected")
+            var selected = QDB.TableFilter.selected();
             var next = selected.nextAll("li:visible:first");
             if(next.length){
                 selected.removeClass("selected");
@@ -155,7 +157,7 @@ $(function(){
             return false;
         },
         "<A-UP>": function(e){
-            var selected = $("#tables ul li.selected")
+            var selected = QDB.TableFilter.selected();
             var prev = selected.prevAll("li:visible:first");
             if(prev.length){
                 selected.removeClass("selected");
@@ -165,7 +167,7 @@ $(function(){
         },
     });
 
-    $("#filter").liveUpdate($("#tables ul"));
+    QDB.TableFilter.input().liveUpdate($("#tables ul"));
 
     $("#results td").live("click", function(){
         Navigator.moveTo($(this));
@@ -176,34 +178,34 @@ $(function(){
         var hash = QueryStore.push($("#query textarea").val())
         QDB.hashes.push(hash);
         window.location.hash = hash;
-        $("#query form textarea").blur();
+        QDB.Query.box().blur();
     });
 
     $(window).bind("hashchange", function(e){
-        var form = $("#query form");
+        var form = QDB.Query.form();
         var query = QueryStore.find(window.location.hash);
 
-        $("#query textarea").val(query);
+        QDB.Query.box().val(query);
         $.ajax({
             url: form.attr("action"),
             data: {"sql": query},
             type: "POST",
             success: function(html){
-                $("#results").html(html);
+                QDB.Results.table().html(html);
                 // Allow for movement!
                 $("#results td:first").addClass("selected");
                 Scroller.scrollToStart();
             },
             error: function(response){
-                $("#results").html(response.responseText);
+                QDB.Results.table().html(response.responseText);
             }
         });
     });
 
     $("#tables li").live("click", function(){
         var table = $(this).text().trim();
-        $("#query form #sql").text("SELECT * FROM " + table + " LIMIT 100");
-        $("#query form").submit();
+        QDB.Query.box().text("SELECT * FROM " + table + " LIMIT 100");
+        QDB.Query.form().submit();
         return false;
     });
 
