@@ -86,14 +86,14 @@ var KeyLock = function(){
 KeyLock.Translator = {
     translate: function(e){
         var key;
-        var isModifierPressed = function(e){
-            return (e.metaKey ||
-                    e.ctrlKey ||
-                    e.altKey ||
-                    (e.keyCode === 13) || // Enter key
-                    (e.keyCode === 27) || // Esc Key
-                    (e.keyCode >= 37 && e.keyCode <= 40) // Arrow Keys
-                   );
+        var isSpecialKey = function(e){
+            return(e.metaKey ||
+                   e.ctrlKey ||
+                   e.altKey ||
+                   (e.keyCode === 13) || // Enter key
+                   (e.keyCode === 27) || // Esc Key
+                   (e.keyCode >= 37 && e.keyCode <= 40) // Arrow Keys
+                  );
         };
 
         var codeToKey = function(code, shift){
@@ -106,7 +106,7 @@ KeyLock.Translator = {
         };
 
         // Return an array of modifier keys
-        // M = meta/alt key
+        // M = alt key
         // C = ctrl key
         // D = command (apple) key
         var modifierKeys = function(e){
@@ -125,7 +125,7 @@ KeyLock.Translator = {
         };
 
         key = codeToKey(e.keyCode, e.shiftKey);
-        if(isModifierPressed(e)){
+        if(isSpecialKey(e)){
            var modifiers = modifierKeys(e);
            modifiers.push(key);
            key = "<" + modifiers.join("-") + ">";
