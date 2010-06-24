@@ -38,7 +38,7 @@ var KeyLock = function(){
 
     // Used to build a closure that sets scope
     var setScopeFunc = function(k){
-        return (function(){ addScope(k); });
+        return (function(){ addScope(k); return false; });
     };
 
 
@@ -50,6 +50,7 @@ var KeyLock = function(){
         console.log(scope);
     };
 
+    // == PUBLIC functions ==
     this.findFunc = function(event){
         var eventKey = KeyLock.Translator.translate(event);
         if(typeof eventKey !== "undefined"){
@@ -117,7 +118,7 @@ KeyLock.Translator = {
             if(e.ctrlKey){
                 modifiers.push("C");
             }
-            if(e.metaKey){
+            if(e.metaKey && !e.ctrlKey){
                 modifiers.push("D");
             }
             return modifiers;
