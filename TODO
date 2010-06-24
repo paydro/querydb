@@ -13,22 +13,8 @@ TODO:
   * Results selected
   * Tables selected
   * Query etc
-* SweetKeys contexts => go with binding on inputs/textareas or using
-  namespaces as currently.
-* Returning false inside a key combination should return false from the
-  bind event (stop propagation)
-* Add QUnit for sweetkeys
-
-NAMING:
-* Better name for SweetKeys. KCombinator. KeyLock?
-* sweetKeys.trigger()
-
-NICE:
-
 * Move in blocks of 5 up and down with CTRL + D and CTRL + U
 * Move to end of row with $ and beginning with 0 or ^
 
 
-Keys:
-* Usually applied to "keypress" event. Not normally done on "keyup" event
 
