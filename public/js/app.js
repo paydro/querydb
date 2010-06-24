@@ -1,11 +1,24 @@
 var keyLogger = function(e){
-    // console.log("KeyPress");
     console.log("keyCode: " + e.keyCode);
     // console.log("meta: " + e.metaKey);
     // console.log("alt: " + e.altKey);
     // console.log("ctrl: " + e.ctrlKey);
     // console.log("shift: " + e.shiftKey);
     // console.log(e);
+};
+
+// Namespace for the app
+var QDB = {
+    Results: {
+        selected: function(){ return $("#results td.selected"); },
+        table: function(){ return $("#results") }
+    },
+    TableFilter: {
+        selected: function(){ return $("#tables li.selected"); }
+    },
+    Query: {
+        box: function(){ return $("#sql"); }
+    }
 };
 
 var QueryStore = {
@@ -33,8 +46,7 @@ var QueryStore = {
 };
 
 
-
-QueryBuilder = {
+var QueryBuilder = {
     columnName: function(element){
         var headerIndex = $(element).index() + 1;
         return $("thead tr th:nth-child(" + headerIndex + ")").text();
@@ -49,98 +61,16 @@ QueryBuilder = {
                     "FROM " + this.tableize(header) + "\n" +
                     "WHERE id = " + element.text().trim();
         $("form textarea").text(query);
-        $("#query").trigger("query");
+        $("#query form").submit();
     },
 }
 
-// **************
-// jQuery Plugins
-// **************
-
-// jQuery helper for KeyLock.
-$.fn.keyLock = function(keyDefinition){
-    if(keyDefinition){
-        var keys = new KeyLock();
-        keys.define(keyDefinition);
-        this.data("keyLock", keys);
-
-        // If we're dealing with the body element, bind a custom
-        // keydown handler that only fires off key events if the
-        // event's target is the body. This allows for key bindings
-        // on the same key for form elements and the body element.
-        // TODO: Rewrite this comment. This is horrible.
-        if(this.get(0).nodeName.toLowerCase() === "body"){
-            this.live("keydown", function(e){
-                if(e.target.nodeName.toLowerCase() === "body"){
-                    return keys.trigger(e);
-                }
-            });
-        }
-        else {
-            this.live("keydown", function(e){
-                return keys.trigger(e);
-            });
-        }
-
-        return this;
-    }
-    else { // Return the KeyLock instance
-        return this.data("keyLock");
-    }
-};
-
-// Originally stolen from:
-// http://ejohn.org/blog/jquery-livesearch/
-$.fn.liveUpdate = function(list){
-    list = $(list);
-    if (list.length) {
-        var rows = list.children('li'),
-        cache = rows.map(function(){
-            return this.innerHTML.toLowerCase();
-        });
-
-        // Note filter happens on key up since we want the character
-        // to be inserted before running the filter
-        this.live("keyup", function(e){
-            var fn = $(this).keyLock().findFunc(e);
-            if(typeof fn === "undefined"){
-                filter.apply(this);
-            }
-        }).keyup();
-    }
-
-    return this;
-
-    function filter(){
-        var term = $.trim($(this).val().toLowerCase()), scores = [];
-
-        rows.removeClass("selected");
-
-        if (!term) {
-            rows.show();
-        } else {
-            rows.hide();
-
-            cache.each(function(i){
-                var score = this.score(term);
-                if (score > 0) { scores.push([score, i]); }
-            });
-
-            $.each(scores.sort(function(a, b){return b[0] - a[0];}), function(){
-                $(rows[ this[1] ]).show();
-            });
-        }
-
-        rows.filter(":visible:first").addClass("selected");
-    }
-};
 
 // ***************
 // Onload function
 // ***************
 $(function(){
-    hashes = new HashStack();
-
+    QDB.hashes = new HashStack();
 
     // Form submit
     $("#query form").live("submit", function(){
@@ -150,7 +80,7 @@ $(function(){
 
     // Clear history
     $("#query button").live("click", function(){
-        hashes.clear();
+        QDB.hashes.clear();
         return false;
     });
 
@@ -166,6 +96,7 @@ $(function(){
         },
     });
 
+    // Global key commands
     $("body").keyLock({
         // Focus on query textarea
         "/": function(event){
@@ -174,14 +105,14 @@ $(function(){
         },
 
         // History navigation
-        "n": function(){ window.location.hash = hashes.next() },
-        "p": function(){ window.location.hash = hashes.prev() },
+        "n": function(){ window.location.hash = QDB.hashes.next() },
+        "p": function(){ window.location.hash = QDB.hashes.prev() },
 
         // Table navigation
         // TODO: Change so that I don't have to create a function here,
         // but just give it the function name - i.e., Navigator.moveLeft.
         // Navigator is using "this" and when not inside a function like below,
-        // this means the element. FAIL.
+        // this means the element.
         "h": function(){ Navigator.moveLeft(); },
         "l": function(){ Navigator.moveRight(); },
         "j": function(){ Navigator.moveDown(); },
@@ -234,7 +165,6 @@ $(function(){
         },
     });
 
-    // Needs to go after the key definition
     $("#filter").liveUpdate($("#tables ul"));
 
     $("#results td").live("click", function(){
@@ -244,7 +174,7 @@ $(function(){
     // Runs a new query
     $("body").bind("query", function(){
         var hash = QueryStore.push($("#query textarea").val())
-        hashes.push(hash);
+        QDB.hashes.push(hash);
         window.location.hash = hash;
         $("#query form textarea").blur();
     });
