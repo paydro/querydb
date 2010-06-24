@@ -57,18 +57,30 @@ QueryBuilder = {
 // jQuery Plugins
 // **************
 
-// Helper for KeyLock.
+// jQuery helper for KeyLock.
 $.fn.keyLock = function(keyDefinition){
-    // Define keys if we have some definition
     if(keyDefinition){
         var keys = new KeyLock();
         keys.define(keyDefinition);
         this.data("keyLock", keys);
-        this.live("keydown", function(e){
-            console.log(keys);
-            console.log(keys.defs());
-            return keys.trigger(e);
-        });
+
+        // If we're dealing with the body element, bind a custom
+        // keydown handler that only fires off key events if the
+        // event's target is the body. This allows for key bindings
+        // on the same key for form elements and the body element.
+        // TODO: Rewrite this comment. This is horrible.
+        if(this.get(0).nodeName.toLowerCase() === "body"){
+            this.live("keydown", function(e){
+                if(e.target.nodeName.toLowerCase() === "body"){
+                    return keys.trigger(e);
+                }
+            });
+        }
+        else {
+            this.live("keydown", function(e){
+                return keys.trigger(e);
+            });
+        }
 
         return this;
     }
@@ -77,6 +89,8 @@ $.fn.keyLock = function(keyDefinition){
     }
 };
 
+// Originally stolen from:
+// http://ejohn.org/blog/jquery-livesearch/
 $.fn.liveUpdate = function(list){
     list = $(list);
     if (list.length) {
@@ -90,14 +104,8 @@ $.fn.liveUpdate = function(list){
         this.live("keyup", function(e){
             var fn = $(this).keyLock().findFunc(e);
             if(typeof fn === "undefined"){
-
                 filter.apply(this);
-                // Something happened in the keydown event, so don't let this
-                // event run
-                // return false;
             }
-            // else {
-            // }
         }).keyup();
     }
 
@@ -191,7 +199,7 @@ $(function(){
         "<CR>": function(){
             QueryBuilder.findParentRecord($("#results .selected"));
         },
-    });
+    }, true);
 
     $("#filter").keyLock({
         "<Esc>": function(){
