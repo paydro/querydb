@@ -124,13 +124,14 @@ $(function(){
         "g": {
             "t": function(e){
                 QDB.TableFilter.input().focus().select();
-                e.preventDefault();
+                return false;
             },
         },
 
         // Go to parent table for foreign key
         "<CR>": function(){
             QueryBuilder.findParentRecord(QDB.Results.selected());
+            return false;
         },
     });
 
