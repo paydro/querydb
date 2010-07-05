@@ -7,20 +7,19 @@ var keyLogger = function(e){
     // console.log(e);
 };
 
-// Namespace for the app
-var QDB = {
-    Results: {
-        selected: function(){ return $("#results td.selected"); },
-        table: function(){ return $("#results") }
-    },
-    TableFilter: {
-        input: function(){ return $("#filter"); },
-        selected: function(){ return $("#tables li.selected"); }
-    },
-    Query: {
-        form: function() { return $("#query form"); },
-        box: function(){ return $("#sql"); }
-    }
+var Results = {
+    curCell: function() { return $("#results td.selected"); },
+    container: function() { return $("#results"); }
+};
+
+var Table = {
+    filterBox: function() { return $("#filter"); },
+    curSelected: function() { return $("#tables li.selected"); }
+};
+
+var Sql = {
+    textBox: function () { return $("#sql"); },
+    form: function () { return $("#query form"); }
 };
 
 var QueryStore = {
@@ -62,8 +61,8 @@ var QueryBuilder = {
         var query = "SELECT * \n" +
                     "FROM " + this.tableize(header) + "\n" +
                     "WHERE id = " + element.text().trim();
-        QDB.Query.box().text(query);
-        QDB.Query.form().submit();
+        Sql.textBox().text(query);
+        Sql.form().submit();
     },
 }
 
@@ -72,24 +71,24 @@ var QueryBuilder = {
 // Onload function
 // ***************
 $(function(){
-    QDB.hashes = new HashStack();
+    hashes = new HashStack();
 
     // Form submit
-    QDB.Query.form().live("submit", function(){
+    Sql.form().live("submit", function(){
         $("#query").trigger("query");
         return false;
     });
 
     // Clear history
     $("#query button").live("click", function(){
-        QDB.hashes.clear();
+        hashes.clear();
         return false;
     });
 
 
-    QDB.Query.box().keyLock({
+    Sql.textBox().keyLock({
         "<Esc>": function(){
-            QDB.Query.box().blur();
+            Sql.textBox().blur();
             return false;
         },
         "<D-CR>": function(){
@@ -100,15 +99,9 @@ $(function(){
 
     // Global key commands
     $("body").keyLock({
-        // Focus on query textarea
-        "/": function(event){
-            $("#query form textarea").focus().select();
-            event.preventDefault();
-        },
-
         // History navigation
-        "n": function(){ window.location.hash = QDB.hashes.next() },
-        "p": function(){ window.location.hash = QDB.hashes.prev() },
+        "n": function(){ window.location.hash = hashes.next() },
+        "p": function(){ window.location.hash = hashes.prev() },
 
         // Table navigation
         // TODO: Change so that I don't have to create a function here,
@@ -120,36 +113,40 @@ $(function(){
         "j": function(){ Navigator.moveDown(); },
         "k": function(){ Navigator.moveUp(); },
 
-        // Focus on the tables pane
+        // Go-to key bindings
         "g": {
             "t": function(e){
-                QDB.TableFilter.input().focus().select();
+                Table.filterBox().focus().select();
+                return false;
+            },
+
+            "s": function(e){
+                Sql.textBox().focus().select();
+                return false;
+            },
+
+            "p": function(e){
+                QueryBuilder.findParentRecord(Results.curCell());
                 return false;
             },
         },
-
-        // Go to parent table for foreign key
-        "<CR>": function(){
-            QueryBuilder.findParentRecord(QDB.Results.selected());
-            return false;
-        },
     });
 
-    QDB.TableFilter.input().keyLock({
+    Table.filterBox().keyLock({
         "<Esc>": function(){
-            QDB.TableFilter.input().blur();
+            Table.filterBox().blur();
             return false;
         },
         "<CR>": function(e){
             // TODO: Temporary. Make <CR> run the query on the selected table
-            var txt = QDB.TableFilter.selected().text().trim();
-            QDB.TableFilter.input().blur();
-            QDB.Query.box().text("SELECT * FROM " + txt + " LIMIT 100");
-            QDB.Query.form().submit();
+            var txt = Table.curSelected().text().trim();
+            Table.filterBox().blur();
+            Sql.textBox().text("SELECT * FROM " + txt + " LIMIT 100");
+            Sql.form().submit();
             return false;
         },
         "<A-DOWN>": function(e){
-            var selected = QDB.TableFilter.selected();
+            var selected = Table.curSelected();
             var next = selected.nextAll("li:visible:first");
             if(next.length){
                 selected.removeClass("selected");
@@ -158,7 +155,7 @@ $(function(){
             return false;
         },
         "<A-UP>": function(e){
-            var selected = QDB.TableFilter.selected();
+            var selected = Table.curSelected();
             var prev = selected.prevAll("li:visible:first");
             if(prev.length){
                 selected.removeClass("selected");
@@ -168,7 +165,7 @@ $(function(){
         },
     });
 
-    QDB.TableFilter.input().liveUpdate($("#tables ul"));
+    Table.filterBox().liveUpdate($("#tables ul"));
 
     $("#results td").live("click", function(){
         Navigator.moveTo($(this));
@@ -177,36 +174,36 @@ $(function(){
     // Runs a new query
     $("body").bind("query", function(){
         var hash = QueryStore.push($("#query textarea").val())
-        QDB.hashes.push(hash);
+        hashes.push(hash);
         window.location.hash = hash;
-        QDB.Query.box().blur();
+        Sql.textBox().blur();
     });
 
     $(window).bind("hashchange", function(e){
-        var form = QDB.Query.form();
+        var form = Sql.form();
         var query = QueryStore.find(window.location.hash);
 
-        QDB.Query.box().val(query);
+        Sql.textBox().val(query);
         $.ajax({
             url: form.attr("action"),
             data: {"sql": query},
             type: "POST",
             success: function(html){
-                QDB.Results.table().html(html);
+                Results.container().html(html);
                 // Allow for movement!
                 $("#results td:first").addClass("selected");
                 Scroller.scrollToStart();
             },
             error: function(response){
-                QDB.Results.table().html(response.responseText);
+                Results.container().html(response.responseText);
             }
         });
     });
 
     $("#tables li").live("click", function(){
         var table = $(this).text().trim();
-        QDB.Query.box().text("SELECT * FROM " + table + " LIMIT 100");
-        QDB.Query.form().submit();
+        Sql.textBox().text("SELECT * FROM " + table + " LIMIT 100");
+        Sql.form().submit();
         return false;
     });
 

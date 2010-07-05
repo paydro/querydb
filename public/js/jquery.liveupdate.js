@@ -8,14 +8,17 @@ $.fn.liveUpdate = function(list){
             return this.innerHTML.toLowerCase();
         });
 
-        // Note filter happens on key up since we want the character
-        // to be inserted before running the filter
-        this.live("keyup", function(e){
+        var handler = function(e){
             var fn = $(this).keyLock().findFunc(e);
             if(typeof fn === "undefined"){
                 filter.apply(this);
             }
-        }).keyup();
+        };
+        // Note filter happens on key up since we want the character
+        // to be inserted before running the filter
+        this.live("keyup", handler)
+            .live("click", handler)
+            .keyup();
     }
 
     return this;
