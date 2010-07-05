@@ -132,6 +132,7 @@ $(function(){
         },
     });
 
+    // Key commands for filtering tables
     Table.filterBox().keyLock({
         "<Esc>": function(){
             Table.filterBox().blur();
@@ -167,6 +168,7 @@ $(function(){
 
     Table.filterBox().liveUpdate($("#tables ul"));
 
+    // Clicking on a table cell highlights that cell
     $("#results td").live("click", function(){
         Navigator.moveTo($(this));
     });
