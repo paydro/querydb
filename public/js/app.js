@@ -192,11 +192,12 @@ $(function(){
             type: "POST",
             success: function(html){
                 Results.container().html(html);
-                // Allow for movement!
                 $("#results td:first").addClass("selected");
                 Scroller.scrollToStart();
             },
             error: function(response){
+                // TODO: Change into a flash-type message rather
+                // than displaying within the results area
                 Results.container().html(response.responseText);
             }
         });
