@@ -10,7 +10,11 @@ module QueryDB::App::Views
 
         @results.each_hash do |row|
           cols = columns.collect do |c|
-            { :name => row[c["name"]], :type => type(c) }
+            name = row[c["name"]]
+            if name && type(c) == "type_blob"
+              name = name[0..100] + " ..."
+            end
+            { :name => name, :type => type(c) }
           end
           data << render(template, :cols => cols)
         end

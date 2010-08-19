@@ -28,20 +28,60 @@ body {
 }
 
 #content {
-    width: 960px;
-    margin: 20px auto;
+    /* width: 960px; */
+    /* margin: 20px auto; */
 }
 
-#results {
-    overflow-x: auto;
+
+#left-panel {
+  width: 250px;
+  float: left;
+  height: 100%;
 }
+
+#right-panel {
+  float: left;
+  height: 100%;
+  overflow-y: hidden;
+}
+
+/* Tables
+ *********************/
+#table-filter {
+  background-color: #FFF;
+}
+
+#tables {
+  height: 100%;
+  /* float: left; */
+  overflow-y: auto;
+}
+
+#tables ul {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#tables ul li {
+  padding: 5px 10px;
+  margin: 0;
+  cursor: pointer;
+}
+#tables ul li:hover {
+  background-color: #aaa;
+}
+
+#tables li.selected {
+  background-color: #ffc;
+}
+
 
 /* Query Box
  **********************/
 
 #query {
-  float: left;
-  width: 550px;
+  height: 200px;
 }
 
 #query textarea {
@@ -59,39 +99,16 @@ body {
     float: right;
 }
 
-/* Tables
- *********************/
-
-#tables {
-  width: 400px;
-  height: 170px;
-  float: left;
-}
-
-#tables ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow-y: auto;
-  height: 150px;
-}
-
-#tables ul li {
-  padding: 5px 10px;
-  margin: 0;
-  cursor: pointer;
-}
-#tables ul li:hover {
-  background-color: #aaa;
-}
-
-#tables li.selected {
-  background-color: #ffc;
-}
 /* Results
  *********************/
+
+#results-container {
+  overflow: auto;
+}
+
 #results {
-  clear: both;
+  width: 100%;
+  height: 100%;
 }
 
 #results table {

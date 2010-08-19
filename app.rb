@@ -41,7 +41,7 @@ module QueryDB
     post "/query" do
       begin
         @results = QueryDB.db.query(params[:sql])
-        mustache :query
+        mustache :query, :layout => false
       rescue Mysql::Error => e
         halt 400, e.message
       end

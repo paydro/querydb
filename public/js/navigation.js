@@ -60,8 +60,10 @@ var Navigator = {
 var Scroller = {
     isInView: function(element){
         var results = $("#results");
-        var windowTop = $(window).scrollTop();
-        var windowBottom = windowTop + $(window).height();
+        // var windowTop = $(window).scrollTop();
+        // var windowBottom = windowTop + $(window).height();
+        var windowTop = $("#results-container").scrollTop();
+        var windowBottom = windowTop + $("#results-container").height();
 
         var resultsLeft = results.offset().left;
         var resultsRight = resultsLeft + results.width();
@@ -80,28 +82,30 @@ var Scroller = {
         return (h && v);
     },
     scrollLeft: function(element){
-        var r = $("#results");
+        var r = $("#results-container");
         var scrollTo = r.scrollLeft() -
                        (r.offset().left - element.offset().left);
         r.scrollLeft(scrollTo);
     },
     scrollRight: function(element){
-        var r = $("#results");
+        var r = $("#results-container");
         var scrollTo = r.scrollLeft() +
                        element.offset().left + element.width() -
                        r.width();
         r.scrollLeft(scrollTo);
     },
     scrollUp: function(element){
-        $(window).scrollTop(element.offset().top);
+        // $(window).scrollTop(element.offset().top);
+        $("#results-container").scrollTop(element.offset().top);
     },
 
     scrollDown: function(element){
-        $(window).scrollTop($(window).scrollTop() + (2 * element.height()));
+        // $(window).scrollTop($(window).scrollTop() + (2 * element.height()));
+        $("#results-container").scrollTop($("#results-container").scrollTop() + (2 * element.height()));
     },
     scrollToStart: function(){
-        $(window).scrollTop(0).scrollLeft(0);
-        $("#results").scrollTop(0).scrollLeft(0);
+        // $(window).scrollTop(0).scrollLeft(0);
+        $("#results-container").scrollTop(0).scrollLeft(0);
     }
 };
 

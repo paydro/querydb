@@ -68,10 +68,18 @@ var QueryBuilder = {
 }
 
 
+var adjustSize = function(){
+    $("#right-panel").width($(window).width() - $("#left-panel").width());
+    $("#results-container").height($(window).height() - $("#query").height());
+};
+$(window).resize(adjustSize);
+
 // ***************
 // Onload function
 // ***************
 $(function(){
+    adjustSize();
+
     QDB.hashes = new HashStack();
 
     // Form submit

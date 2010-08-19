@@ -1,28 +1,33 @@
 
-<div id="tables" class="clearfix">
-  <div id="table-filter">
-    <label>Filter</label>
-    <input type="text" name="filter" id="filter" />
-  </div>
-  <ul class="clearfix">
-  {{#tables}}
-    <li>{{to_s}}</li>
-  {{/tables}}
-  </ul>
-</div>
 
-<div id="query" class="clearfix">
-  <form action="/query" method="get">
-    <textarea name="sql" id="sql"></textarea>
-
-    <div class="submit">
-      <button>Clear History</button>
-      <input type="submit" value="Query" />
+<div id="left-panel">
+  <div id="tables" class="clearfix">
+    <div id="table-filter">
+      <label>Filter</label>
+      <input type="text" name="filter" id="filter" />
     </div>
-  </form>
+    <ul class="clearfix">
+    {{#tables}}
+      <li>{{to_s}}</li>
+    {{/tables}}
+    </ul>
+  </div>
 </div>
 
-<br />
+<div id="right-panel" class="clearfix">
+  <div id="query" class="clearfix">
+    <form action="/query" method="get">
+      <textarea name="sql" id="sql"></textarea>
 
-<div id="results">
+      <div class="submit">
+        <button>Clear History</button>
+        <input type="submit" value="Query" />
+      </div>
+    </form>
+  </div>
+
+  <div id="results-container">
+    <div id="results">
+    </div>
+  </div>
 </div>
