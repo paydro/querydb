@@ -48,7 +48,7 @@ body {
   width: 100%;
   height: 150px;
 
-  font-size: 14px;
+  font-size: 11px;
   font-family: "Bitstream Vera Sans Mono";
 }
 
@@ -96,7 +96,7 @@ body {
 }
 
 #results table {
-  font-size: 13px;
+  font-size: 11px;
   font-family: "Bitstream Vera Sans";
 }
     #results th, #results td {

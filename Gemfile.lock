@@ -1,0 +1,17 @@
+GEM
+  specs:
+    mustache (0.11.2)
+    mysql2 (0.2.6)
+    rack (1.2.1)
+    sinatra (1.0)
+      rack (>= 1.0)
+    yajl-ruby (0.7.8)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  mustache
+  mysql2
+  sinatra
+  yajl-ruby

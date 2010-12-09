@@ -4,9 +4,9 @@
     <input type="search" name="filter" autosave="searchdoc" autocomplete="off" placeholder="Search" id="filter" />
   </div>
   <ul class="clearfix">
-  {{#tables}}
-    <li>{{to_s}}</li>
-  {{/tables}}
+    <% @tables.each do |table| %>
+      <li><%= table[1] %></li>
+    <% end %>
   </ul>
 </div>
 
