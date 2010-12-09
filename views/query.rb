@@ -1,5 +1,9 @@
 module QueryDB::App::Views
   class Query < Layout
+    def table
+      @query_info[:table]
+    end
+
     def columns
       @columns ||= @results.fetch_fields.collect {|f| f.hash }
     end

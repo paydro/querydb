@@ -190,8 +190,11 @@ $(function(){
             url: form.attr("action"),
             data: {"sql": query},
             type: "POST",
-            success: function(html){
-                Results.container().html(html);
+            dataType: "json",
+            success: function(json){
+                console.log("State object:");
+                console.log(json);
+                Results.container().html(json["html"]);
                 $("#results td:first").addClass("selected");
                 Scroller.scrollToStart();
             },

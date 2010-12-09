@@ -3,6 +3,7 @@ require 'sinatra/base'
 require 'mustache/sinatra'
 require 'mysql'
 require 'yaml'
+require 'yajl/json_gem'
 require 'pp'
 
 module QueryDB
@@ -41,7 +42,14 @@ module QueryDB
     post "/query" do
       begin
         @results = QueryDB.db.query(params[:sql])
-        mustache :query
+        @query_info = analyze(params[:sql])
+        result = {
+          :html => mustache(:query, :layout => false),
+          :meta => @query_info
+        }
+
+        content_type "application/json"
+        result.to_json
       rescue Mysql::Error => e
         halt 400, e.message
       end
@@ -54,6 +62,14 @@ module QueryDB
         results.each do |row|
           @tables << row.first
         end
+      end
+
+      # Find the table within the SQL statement
+      def analyze(sql)
+        meta = {}
+        meta[:table] = sql.match(/from\s+([A-Za-z0-9_]+)/i)[1]
+
+        meta
       end
   end
 end
