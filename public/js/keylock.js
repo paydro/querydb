@@ -1,4 +1,4 @@
-var KeyLock = function(){
+var Keylock = function(){
     var keyMap = {};
     var scope = [];
 
@@ -52,7 +52,7 @@ var KeyLock = function(){
 
     // == PUBLIC functions ==
     this.findFunc = function(event){
-        var eventKey = KeyLock.Translator.translate(event);
+        var eventKey = Keylock.Translator.translate(event);
         if(typeof eventKey !== "undefined"){
             var fn = find(eventKey);
             return fn;
@@ -60,7 +60,6 @@ var KeyLock = function(){
         return undefined;
     };
 
-    // TODO: need better name
     // Return the value of the function. This allows stopping the bubbling
     // of an event if the event handler returns this value as well.
     this.trigger = function(event){
@@ -83,25 +82,54 @@ var KeyLock = function(){
 };
 
 // Key Translator
-KeyLock.Translator = {
+Keylock.Translator = {
+    alphaKeys: [
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
+        "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+    ],
+    digits: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
+    capDigits: [ ")", "!", "@", "#", "$", "%", "^", "&", "*", "(" ],
+
+    // Keycode to character lookup object
+    chars: {
+        13: "CR",
+        27: "Esc",
+        32: "Space",
+        37: "A-LEFT",
+        38: "A-UP",
+        39: "A-RIGHT",
+        40: "A-DOWN",
+        191: "/",
+    },
     translate: function(e){
         var key;
+
+        // Lookup table for keys that should be surrounded by angle brackets
+        var bracketKeys = [
+            13, // Return/Enter key
+            27, // Esc key
+            32, // Spacebar
+            37, 38, 39, 40, // Arrow Keys
+        ]
         var isSpecialKey = function(e){
-            return(e.metaKey ||
-                   e.ctrlKey ||
-                   e.altKey ||
-                   (e.keyCode === 13) || // Enter key
-                   (e.keyCode === 27) || // Esc Key
-                   (e.keyCode >= 37 && e.keyCode <= 40) // Arrow Keys
-                  );
+            return(e.metaKey || e.ctrlKey || e.altKey ||
+                bracketKeys.indexOf(e.keyCode) >= 0
+            );
         };
 
+
         var codeToKey = function(code, shift){
-            if(shift){
-                return KeyLock.Translator.upperCase[code];
+            var t = Keylock.Translator;
+            if(code >= 65 && code <= 90){
+                var key = t.alphaKeys[code - 65];
+                return shift ? key.toUpperCase() : key;
+            }
+            else if(code >= 48 && code <= 57){
+                var offset = code - 48;
+                return shift ? t.capDigits[offset] : t.digits[offset];
             }
             else {
-                return KeyLock.Translator.lowerCase[code];
+                return t.chars[code];
             }
         };
 
@@ -133,107 +161,5 @@ KeyLock.Translator = {
 
         return key;
     },
-    upperCase: {
-        13: "CR",
-        191: "?",
-        65: "A",
-        66: "B",
-        67: "C",
-        68: "D",
-        69: "E",
-        70: "F",
-        71: "G",
-        72: "H",
-        73: "I",
-        74: "J",
-        75: "K",
-        76: "L",
-        77: "M",
-        78: "N",
-        79: "O",
-        80: "P",
-        81: "Q",
-        82: "R",
-        83: "S",
-        84: "T",
-        85: "U",
-        86: "V",
-        87: "W",
-        88: "X",
-        89: "Y",
-        90: "Z",
-    },
-    lowerCase: {
-        27: "Esc",
-        13: "CR",
-        37: "A-LEFT",
-        38: "A-UP",
-        39: "A-RIGHT",
-        40: "A-DOWN",
-        191: "/",
-        65: "a",
-        66: "b",
-        67: "c",
-        68: "d",
-        69: "e",
-        70: "f",
-        71: "g",
-        72: "h",
-        73: "i",
-        74: "j",
-        75: "k",
-        76: "l",
-        77: "m",
-        78: "n",
-        79: "o",
-        80: "p",
-        81: "q",
-        82: "r",
-        83: "s",
-        84: "t",
-        85: "u",
-        86: "v",
-        87: "w",
-        88: "x",
-        89: "y",
-        90: "z",
-    },
-
 };
 
-// jQuery plugin
-if(typeof jQuery !== "undefined"){
-    (function($){
-        // jQuery helper for KeyLock.
-        $.fn.keyLock = function(keyDefinition){
-            if(keyDefinition){
-                var keys = new KeyLock();
-                keys.define(keyDefinition);
-                this.data("keyLock", keys);
-
-                // If we're dealing with the body element, bind a custom
-                // keydown handler that only fires off key events if the
-                // event's target is the body. This allows for key bindings
-                // on the same key for form elements and the body element.
-                // TODO: Rewrite this comment. This is horrible.
-                if(this.get(0).nodeName.toLowerCase() === "body"){
-                    this.live("keydown", function(e){
-                        if(e.target.nodeName.toLowerCase() === "body"){
-                            return keys.trigger(e);
-                        }
-                    });
-                }
-                else {
-                    this.live("keydown", function(e){
-                        return keys.trigger(e);
-                    });
-                }
-
-                return this;
-            }
-            else { // Return the KeyLock instance
-                return this.data("keyLock");
-            }
-        };
-    })(jQuery);
-}

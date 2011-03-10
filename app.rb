@@ -42,12 +42,14 @@ module QueryDB
 
     post "/query" do
       begin
-        @results = QueryDB.db.query(params[:sql])
+        results = QueryDB.db.query(params[:sql])
+        @results = results.to_a
         @query_info = analyze(params[:sql])
-        @columns = @results.fields
+        @columns = results.fields
+         
         result = {
           :html => erb(:query, :layout => false),
-          :meta => @query_info
+          # :meta => @query_info
         }
 
         content_type "application/json"

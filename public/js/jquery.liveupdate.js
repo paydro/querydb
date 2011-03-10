@@ -9,7 +9,7 @@ $.fn.liveUpdate = function(list){
         });
 
         var handler = function(e){
-            var fn = $(this).keyLock().findFunc(e);
+            var fn = $(this).keylock().findFunc(e);
             if(typeof fn === "undefined"){
                 filter.apply(this);
             }

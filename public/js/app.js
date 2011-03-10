@@ -1,107 +1,279 @@
-var keyLogger = function(e){
-    console.log("keyCode: " + e.keyCode);
-    // console.log("meta: " + e.metaKey);
-    // console.log("alt: " + e.altKey);
-    // console.log("ctrl: " + e.ctrlKey);
-    // console.log("shift: " + e.shiftKey);
-    // console.log(e);
+var TableList = function(selector){
+    var element = $(selector);
+    var list = element.find("ul");
+    var filterBox = element.find("#filter");
+    var that = this;
+
+    // Initialize jQuery elements
+    (function(){
+        
+        var selectNext = function(){
+            var selected = that.selected();
+            var next = selected.nextAll("li:visible:first");
+            if(next.length){
+                selected.removeClass("selected");
+                next.addClass("selected");
+            }
+            return false;
+        };
+
+        var selectPrev = function(){
+            var selected = that.selected();
+            var prev = selected.prevAll("li:visible:first");
+            if(prev.length){
+                selected.removeClass("selected");
+                prev.addClass("selected");
+            }
+            return false;
+        };
+
+        // Initialize keybindings
+        filterBox.keylock({
+            "<Esc>": function(){
+                that.blur();
+                return false;
+            },
+            "<CR>": function(e){
+                $(document).trigger("browsetable", that.selectedTableName());
+                return false;
+            },
+            "<A-DOWN>": selectNext, 
+            // "<C-n>": selectNext, 
+            "<A-UP>": selectPrev,
+            // "<C-p>": selectPrev
+        });
+
+        // Allow live filter in the filter box
+        filterBox.liveUpdate(element.find("ul"));
+
+        list.find("li a").live("click", function(){
+            app.tables.select($(this));
+            $(document).trigger("browsetable", app.tables.selectedTableName());
+            return false;
+        });
+    })();
+
+    this.focus = function(){
+        filterBox.focus().select();
+    };
+
+    this.blur = function(){
+        filterBox.blur();
+    };
+
+    this.select = function(el) {
+        list.find(".selected").removeClass("selected");
+        el.addClass("selected")
+    };
+
+    this.selected = function(){
+        return element.find(".selected");
+    };
+
+    this.selectedTableName = function(){
+        return this.selected().text().trim();        
+    };
 };
 
-var Results = {
-    curCell: function() { return $("#results td.selected"); },
-    container: function() { return $("#results"); }
+var Results = function(selector){
+    var element = $(selector);
+    
+    // Clicking on a table cell highlights that cell
+    element.find("td").live("click", function(){
+        Navigator.moveTo($(this));
+    });
+
+    this.update = function(html){
+        element.html(html);
+    };
 };
 
-var Table = {
-    filterBox: function() { return $("#filter"); },
-    curSelected: function() { return $("#tables li.selected"); }
+var QueryBox = function(selector){
+    var element = $(selector);
+    var form = element.find("form");
+    var textarea = element.find("textarea");
+    var that = this;
+
+    // Initialize jQuery elements
+    (function(){
+        textarea.keylock({
+            "<Esc>": function(){
+                that.blur()
+                return false;
+            },
+            "<D-CR>": function(){
+                $(document).trigger("execquery", that.query());
+                return false;
+            },
+        });
+
+        form.live("submit", function(){
+            $(document).trigger("execquery", textarea.val());
+            return false;
+        });
+    })();
+
+    this.focus = function(){
+        textarea.focus().select();
+    };
+
+    this.blur = function(){
+        textarea.blur();
+    };
+
+    this.update = function(value){
+        textarea.val(value);   
+    };
+
+    this.query = function(){
+        return textarea.val();
+    };
+
 };
 
-var Sql = {
-    textBox: function () { return $("#sql"); },
-    form: function () { return $("#query form"); }
-};
 
-var QueryStore = {
-    push: function(query){
-        hash = "#" + $.sha1(query);
-        localStorage.setItem(hash, query);
-        return hash;
-    },
-    find: function(hash){
-        return localStorage.getItem(hash);
-    },
-    findAll: function(){
-        // NOTE: localStorage stores items in an arbitrary order
-        var hashes = [];
-        var ls = localStorage;
-        for(i = 0; i < ls.length; i++){
-            hashes[i] = ls.key(i);
+// Handles the server requests as well as caching similar requests
+var Server = function(queryHistory, app){
+    var cacheList = [];
+    var cacheResults = {};
+
+    this.exec = function(query, reload){
+        if(arguments.length == 1) reload = false;
+
+        hash = queryHistory.hash(query);
+        if(cacheResults[hash] && reload == false) {
+            updateResults(cacheResults[hash]);
+            return;
         }
 
-        return hashes;
-    },
-    clear: function(){
-        localStorage.clear();
-    },
+        $.ajax({
+            url: "/query",
+            data: {"sql": query},
+            type: "POST",
+            dataType: "json",
+            success: function(json){
+                updateResults(json);                
+                addToCache(query, json);
+            },
+            error: function(response){
+                // TODO: Change into a flash-type message rather
+                // than displaying within the results area
+                app.results.update(response.responseText);
+            }
+        });
+    };
+
+    var updateResults = function(json){
+        app.results.update(json["html"]);
+        $("#results td:first").addClass("selected");
+        Scroller.scrollToStart();
+        $("title").val(query);
+    };
+
+    var addToCache = function(query, json){
+        hash = queryHistory.hash(query);
+        cacheList.push(hash);
+        cacheResults[hash] = json;
+
+        if(cacheList.length > 10){
+            cacheList.splice(0,1);
+        }
+    };
 };
 
+var QueryHistory = function(){
 
-var QueryBuilder = {
-    columnName: function(element){
-        var headerIndex = $(element).index() + 1;
-        return $("thead tr th:nth-child(" + headerIndex + ")").text();
-    },
-    tableize: function(str){
-        return str.replace(/_id/, "s");
-    },
-    findParentRecord: function(element){
-        var header = this.columnName(element);
+    this.hash = function(query){
+        return "#" + $.sha1(query);
+    };
 
-        var query = "SELECT * \n" +
-                    "FROM " + this.tableize(header) + "\n" +
-                    "WHERE id = " + element.text().trim();
-        Sql.textBox().text(query);
-        Sql.form().submit();
-    },
-}
+    this.add = function(query){
+        hash = this.hash(query);
+        localStorage.setItem(hash, query);
+        history.pushState(null, "", location.pathname + hash);
+        return hash;
+    };
+
+    this.addWithHash = function(hash, query){
+        hash = "#" + hash; 
+        localStorage.setItem(hash, query);
+        history.pushState(null, "", location.pathname + hash);
+        return hash;
+    };
+
+    this.findHash = function(hash){
+        return localStorage.getItem(hash);
+    };
+};
+
+var QueryBuilder = function(){
+    var queryCache = {}; 
+
+    this.fromTable = function(name){
+        if(queryCache[name]) { return queryCache[name]; }
+        queryCache[name] = "SELECT * FROM " + name + " LIMIT 200";
+        return queryCache[name];
+    }
+};
+
+// Global module for jQuery objects
+var app = {
+    updateTitle: (function(){
+        var title = $("title");
+        return(function(val){
+            title.text(val);      
+        });
+    })()
+};
+var queryHistory = new QueryHistory();
+var queryBuilder = new QueryBuilder();
+var server = new Server(queryHistory, app);
+
+
+// BINDINGS
+
+$(document).bind("browsetable", function(e, table){
+    var query = queryBuilder.fromTable(table)
+
+    app.queryBox.update(query);
+    app.updateTitle(query);
+    server.exec(query);
+    queryHistory.addWithHash(table, query);
+});
+
+$(document).bind("execquery", function(e, query){
+    server.exec(query);
+    queryHistory.add(query);
+    app.updateTitle(query);
+});
+
+$(document).bind("reloadquery", function(e, sql){
+    server.exec(sql, true);
+});
 
 
 // ***************
 // Onload function
 // ***************
 $(function(){
-    hashes = new HashStack();
+    
+    app.queryBox = new QueryBox("#query");
+    app.results = new Results("#results");
+    app.tables = new TableList("#tables");
 
-    // Form submit
-    Sql.form().live("submit", function(){
-        $("#query").trigger("query");
-        return false;
-    });
-
-    // Clear history
-    $("#query button").live("click", function(){
-        hashes.clear();
-        return false;
-    });
-
-
-    Sql.textBox().keyLock({
-        "<Esc>": function(){
-            Sql.textBox().blur();
-            return false;
-        },
-        "<D-CR>": function(){
-            $("#query form").submit();
-            return false;
-        },
-    });
+    // Force query box to be the full width at the top
+    $("#query textarea").css({"width": ($(window).width()-195)});
 
     // Global key commands
-    $("body").keyLock({
+    $(document).keylock({
         // History navigation
-        "n": function(){ window.location.hash = hashes.next() },
-        "p": function(){ window.location.hash = hashes.prev() },
+        "n": function(){ history.forward(); },
+        "p": function(){ history.back(); },
+
+        // Reload current query
+        "r": function(){ 
+            $(document).trigger("reloadquery", app.queryBox.query());
+        },
 
         // Table navigation
         // TODO: Change so that I don't have to create a function here,
@@ -116,105 +288,34 @@ $(function(){
         // Go-to key bindings
         "g": {
             "t": function(e){
-                Table.filterBox().focus().select();
+                app.tables.focus()
                 return false;
             },
 
             "s": function(e){
-                Sql.textBox().focus().select();
-                return false;
-            },
-
-            "p": function(e){
-                QueryBuilder.findParentRecord(Results.curCell());
+                app.queryBox.focus();
                 return false;
             },
         },
-    });
-
-    // Key commands for filtering tables
-    Table.filterBox().keyLock({
-        "<Esc>": function(){
-            Table.filterBox().blur();
-            return false;
-        },
-        "<CR>": function(e){
-            // TODO: Temporary. Make <CR> run the query on the selected table
-            var txt = Table.curSelected().text().trim();
-            Table.filterBox().blur();
-            Sql.textBox().text("SELECT * FROM " + txt + " LIMIT 100");
-            Sql.form().submit();
-            return false;
-        },
-        "<A-DOWN>": function(e){
-            var selected = Table.curSelected();
-            var next = selected.nextAll("li:visible:first");
-            if(next.length){
-                selected.removeClass("selected");
-                next.addClass("selected");
-            }
-            return false;
-        },
-        "<A-UP>": function(e){
-            var selected = Table.curSelected();
-            var prev = selected.prevAll("li:visible:first");
-            if(prev.length){
-                selected.removeClass("selected");
-                prev.addClass("selected");
-            }
-            return false;
-        },
-    });
-
-    Table.filterBox().liveUpdate($("#tables ul"));
+    }); // end keylock
 
     // Clicking on a table cell highlights that cell
     $("#results td").live("click", function(){
         Navigator.moveTo($(this));
     });
 
-    // Runs a new query
-    $("body").bind("query", function(){
-        var hash = QueryStore.push($("#query textarea").val())
-        hashes.push(hash);
-        window.location.hash = hash;
-        Sql.textBox().blur();
+    // Take control of the history
+    $(window).bind('popstate', function(event){
+        if(location.hash == "") {
+            app.queryBox.update("");   
+        }
+        else {
+            var query = queryHistory.findHash(location.hash)
+            app.queryBox.update(query);
+            server.exec(query);
+        }
     });
-
-    $(window).bind("hashchange", function(e){
-        var form = Sql.form();
-        var query = QueryStore.find(window.location.hash);
-
-        Sql.textBox().val(query);
-        $.ajax({
-            url: form.attr("action"),
-            data: {"sql": query},
-            type: "POST",
-            dataType: "json",
-            success: function(json){
-                console.log("State object:");
-                console.log(json);
-                Results.container().html(json["html"]);
-                $("#results td:first").addClass("selected");
-                Scroller.scrollToStart();
-            },
-            error: function(response){
-                // TODO: Change into a flash-type message rather
-                // than displaying within the results area
-                Results.container().html(response.responseText);
-            }
-        });
-    });
-
-    $("#tables li").live("click", function(){
-        var table = $(this).text().trim();
-        Sql.textBox().text("SELECT * FROM " + table + " LIMIT 100");
-        Sql.form().submit();
-        return false;
-    });
-
-    if(window.location.hash){
-        $(window).trigger("hashchange");
-    }
 
 });
+
+

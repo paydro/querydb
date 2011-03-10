@@ -1,27 +1,24 @@
 
-<div id="tables" class="clearfix">
-  <div id="table-filter">
-    <input type="search" name="filter" autosave="searchdoc" autocomplete="off" placeholder="Search" id="filter" />
-  </div>
-  <ul class="clearfix">
-    <% @tables.each do |table| %>
-      <li><%= table[1] %></li>
-    <% end %>
-  </ul>
-</div>
-
-<div id="query" class="clearfix">
-  <form action="/query" method="get">
-    <textarea name="sql" id="sql"></textarea>
-
-    <div class="submit">
-      <button>Clear History</button>
-      <input type="submit" value="Query" />
+  <div id="tables" class="clearfix">
+    <div id="table-filter">
+      <input type="search" name="filter" autosave="searchdoc" autocomplete="off" placeholder="Filter" id="filter" />
     </div>
-  </form>
-</div>
+    <ul class="clearfix">
+      <% @tables.each do |table| %>
+        <li><a href="#<%= table[1] %>"><%= table[1] %></a></li>
+      <% end %>
+    </ul>
+  </div>
 
-<br />
+  <div id="query" class="clearfix">
+    <form action="/query" method="get">
+      <textarea name="sql" id="sql"></textarea>
 
-<div id="results">
-</div>
+      <div class="submit">
+        <input type="submit" value="Query" />
+      </div>
+    </form>
+  </div>
+
+  <div id="results">
+  </div>

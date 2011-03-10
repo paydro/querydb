@@ -2,7 +2,6 @@
 var HashStack = function(){
     // Array of hashes
     var stack = [];
-    var mruStack = [];
     var pointer = 0;
 
     // Load up stack
