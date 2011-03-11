@@ -100,6 +100,6 @@ var Navigator = function(){
         markSelected(selected, element);
         scrollIntoView();
     };
-}
+};
 
 

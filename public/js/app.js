@@ -316,6 +316,8 @@ $(function(){
             app.queryBox.update(query);
             server.exec(query);
         }
+    }).resize(function(){
+        app.resizeElements();   
     });
 
 });
