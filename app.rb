@@ -6,7 +6,7 @@ require 'mysql2'
 require 'yaml'
 require 'yajl/json_gem'
 require 'erb'
-
+require 'ruby-debug'
 require 'pp'
 
 module QueryDB
@@ -14,6 +14,7 @@ module QueryDB
   def self.db
     unless @db
       config = YAML.load_file("config/database.yml")
+      Mysql2::Client.default_query_options.merge!(:as => :array)
       @db = Mysql2::Client.new(
         :host => config["host"],
         :username => config["username"],
@@ -27,12 +28,34 @@ module QueryDB
 
 
   class App < Sinatra::Base
-
     def query(sql, options = {})
       QueryDB.db.query(sql, options)
     end
 
     set :public, File.dirname(__FILE__) + "/public"
+
+    helpers do
+      include Rack::Utils
+      alias_method :h, :escape_html
+
+      # Determine what type of column the field is. Not very awesome, 
+      # but solves the issues of text fields being to large and stopping
+      # time fields from wrapping.
+      #
+      # Better solution: parse the SQL statement to find the table(s) and
+      # determine column types
+      def column_class(col, val)
+        classes = []
+        classes << "text" if(val.is_a?(String) && val.length > 100)
+        classes << "string" if(val.is_a?(String) && val.length <= 100)
+        classes << "datetime" if col.match(/^.*(_at|_on)$/)
+        if classes.empty?
+          ""
+        else
+          %Q[ class="#{classes.join(" ")}"]
+        end
+      end
+    end
 
     get "/" do
       @title = "Query DB"
@@ -42,14 +65,11 @@ module QueryDB
 
     post "/query" do
       begin
-        results = QueryDB.db.query(params[:sql])
-        @results = results.to_a
-        @query_info = analyze(params[:sql])
-        @columns = results.fields
-         
+        @results = query(params[:sql])
+        @columns = @results.fields
+
         result = {
           :html => erb(:query, :layout => false),
-          # :meta => @query_info
         }
 
         content_type "application/json"
@@ -61,19 +81,7 @@ module QueryDB
 
     protected
       def load_tables
-        results = query(%[SHOW TABLES])
-        @tables = []
-        results.each do |row|
-          @tables << row.first
-        end
-      end
-
-      # Find the table within the SQL statement
-      def analyze(sql)
-        meta = {}
-        meta[:table] = sql.match(/from\s+([A-Za-z0-9_]+)/i)[1]
-
-        meta
+        @tables = query(%[SHOW TABLES])
       end
   end
 end

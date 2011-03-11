@@ -9,10 +9,8 @@
   <tbody>
     <% @results.each do |row| %>
         <tr>
-          <% @columns.each do |col| %>
-            <td>
-              <%= row[col] %>
-            </td>
+          <% row.each_with_index do |val,i| %>
+            <td<%= column_class(@columns[i], val) %>><%= h val %></td>
           <% end %>
         </tr>
     <% end %>

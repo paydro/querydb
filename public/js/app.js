@@ -38,16 +38,14 @@ var TableList = function(selector){
                 return false;
             },
             "<A-DOWN>": selectNext, 
-            // "<C-n>": selectNext, 
             "<A-UP>": selectPrev,
-            // "<C-p>": selectPrev
         });
 
         // Allow live filter in the filter box
         filterBox.liveUpdate(element.find("ul"));
 
         list.find("li a").live("click", function(){
-            app.tables.select($(this));
+            app.tables.select($(this).parent());
             $(document).trigger("browsetable", app.tables.selectedTableName());
             return false;
         });
@@ -71,16 +69,17 @@ var TableList = function(selector){
     };
 
     this.selectedTableName = function(){
-        return this.selected().text().trim();        
+        return this.selected().find("a").text().trim();        
     };
+
 };
 
-var Results = function(selector){
+var Results = function(selector, app){
     var element = $(selector);
     
     // Clicking on a table cell highlights that cell
     element.find("td").live("click", function(){
-        Navigator.moveTo($(this));
+        app.nav.select($(this));
     });
 
     this.update = function(html){
@@ -129,6 +128,9 @@ var QueryBox = function(selector){
         return textarea.val();
     };
 
+    this.resize = function(){
+        textarea.css({"width": ($(window).width()-195)});
+    };
 };
 
 
@@ -165,9 +167,8 @@ var Server = function(queryHistory, app){
 
     var updateResults = function(json){
         app.results.update(json["html"]);
-        $("#results td:first").addClass("selected");
-        Scroller.scrollToStart();
-        $("title").val(query);
+        app.nav.select($("#results td:first")); // TODO Use app.results
+        app.updateTitle(query);
     };
 
     var addToCache = function(query, json){
@@ -211,7 +212,7 @@ var QueryBuilder = function(){
 
     this.fromTable = function(name){
         if(queryCache[name]) { return queryCache[name]; }
-        queryCache[name] = "SELECT * FROM " + name + " LIMIT 200";
+        queryCache[name] = "SELECT * FROM `" + name + "` LIMIT 200";
         return queryCache[name];
     }
 };
@@ -223,8 +224,13 @@ var app = {
         return(function(val){
             title.text(val);      
         });
-    })()
+    })(),
+
+    resizeElements: function(){
+        app.queryBox.resize();
+    }
 };
+
 var queryHistory = new QueryHistory();
 var queryBuilder = new QueryBuilder();
 var server = new Server(queryHistory, app);
@@ -239,12 +245,14 @@ $(document).bind("browsetable", function(e, table){
     app.updateTitle(query);
     server.exec(query);
     queryHistory.addWithHash(table, query);
+    app.tables.blur();
 });
 
 $(document).bind("execquery", function(e, query){
     server.exec(query);
     queryHistory.add(query);
     app.updateTitle(query);
+    app.queryBox.blur();
 });
 
 $(document).bind("reloadquery", function(e, sql){
@@ -258,13 +266,16 @@ $(document).bind("reloadquery", function(e, sql){
 $(function(){
     
     app.queryBox = new QueryBox("#query");
-    app.results = new Results("#results");
+    app.results = new Results("#results", app);
     app.tables = new TableList("#tables");
+    app.nav = new Navigator();
+
+    app.resizeElements();
 
     // Force query box to be the full width at the top
-    $("#query textarea").css({"width": ($(window).width()-195)});
+    // $("#query textarea").css({"width": ($(window).width()-195)});
 
-    // Global key commands
+    // Global key bindings
     $(document).keylock({
         // History navigation
         "n": function(){ history.forward(); },
@@ -275,20 +286,16 @@ $(function(){
             $(document).trigger("reloadquery", app.queryBox.query());
         },
 
-        // Table navigation
-        // TODO: Change so that I don't have to create a function here,
-        // but just give it the function name - i.e., Navigator.moveLeft.
-        // Navigator is using "this" and when not inside a function like below,
-        // this means the element.
-        "h": function(){ Navigator.moveLeft(); },
-        "l": function(){ Navigator.moveRight(); },
-        "j": function(){ Navigator.moveDown(); },
-        "k": function(){ Navigator.moveUp(); },
+        // Result Table navigation
+        "h": app.nav.moveLeft,
+        "l": app.nav.moveRight,
+        "j": app.nav.moveDown,
+        "k": app.nav.moveUp,
 
         // Go-to key bindings
         "g": {
             "t": function(e){
-                app.tables.focus()
+                app.tables.focus();
                 return false;
             },
 
@@ -298,11 +305,6 @@ $(function(){
             },
         },
     }); // end keylock
-
-    // Clicking on a table cell highlights that cell
-    $("#results td").live("click", function(){
-        Navigator.moveTo($(this));
-    });
 
     // Take control of the history
     $(window).bind('popstate', function(event){

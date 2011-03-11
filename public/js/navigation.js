@@ -1,107 +1,105 @@
-var Navigator = {
-    selected: function(){ return $("#results td.selected"); },
-    moveLeft: function(){
-        if(this.selected().prev().length){
-            this.selected().
-                removeClass("selected").
-                prev().addClass("selected");
+var Navigator = function(){
+    var selected; // element with class="selected"
+    var that = this;
 
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollLeft(this.selected());
+    // Helper that moves selected elements into view
+    this.Scroller = {
+        topPadding: 148,
+        leftPadding: 192,
+        scrollIntoView: function(element){
+            var borderTop, borderBottom, borderLeft, borderRight,
+                elTop, elBottom, elLeft, elRight, win;
+            
+            win = $(window)
+            borderTop = win.scrollTop() + that.Scroller.topPadding; 
+            // Without subtracting 15 from the bottom border, the element will
+            // be off screen. The difference is to push it into the viewable 
+            // area. Sadly, I'm not sure why I have to do this.
+            borderBottom = win.scrollTop() + win.height() - 15;
+            borderLeft = win.scrollLeft() + that.Scroller.leftPadding;
+            // Again, like the bottom border trick above, subtract 25 so that
+            // the selected element is pushed into the viewable area. 
+            borderRight = win.scrollLeft() + win.width() - 25;
+
+            elTop = element.offset().top;
+            elBottom = elTop + element.height();
+            elLeft = element.offset().left;
+            elRight = elLeft + element.width();
+
+            if(elBottom > borderBottom){
+                scrollAmount = win.scrollTop() + elBottom - borderBottom;
+                win.scrollTop(scrollAmount);   
+            }
+
+            if(elTop < borderTop){
+                win.scrollTop(elTop - that.Scroller.topPadding);
+            }
+
+            if(elLeft < borderLeft){
+                win.scrollLeft(elLeft - that.Scroller.leftPadding);
+            }
+
+            if(elRight > borderRight){
+                scrollAmount = win.scrollLeft() + elRight - borderRight;
+                win.scrollLeft(scrollAmount);
             }
         }
-    },
-    moveRight: function(){
-        if(this.selected().next().length){
-            this.selected().
-                removeClass("selected").
-                next().addClass("selected");
+    };
 
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollRight(this.selected());
-            }
-        }
-    },
-    moveUp: function(){
-        if(this.selected().parent().prev().length){
-            var index = this.selected().index();
-            var newSelected = this.selected().
-                removeClass("selected").
-                parent().
-                prev().children().get(index);
-            $(newSelected).addClass("selected");
-
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollUp(this.selected());
-            }
-        }
-    },
-    moveDown: function(){
-        if(this.selected().parent().next().length){
-            var index = this.selected().index();
-            var newSelected = this.selected().
-                removeClass("selected").
-                parent().
-                next().children().get(index);
-            $(newSelected).addClass("selected");
-
-            if(!Scroller.isInView(this.selected())){
-                Scroller.scrollDown(this.selected());
-            }
-        }
-    },
-
-    moveTo: function(element){
-        this.selected().removeClass("selected");
-        element.addClass("selected");
-    },
-};
-
-var Scroller = {
-    isInView: function(element){
-        var results = $("#results");
-        var windowTop = $(window).scrollTop();
-        var windowBottom = windowTop + $(window).height();
-
-        var resultsLeft = results.offset().left;
-        var resultsRight = resultsLeft + results.width();
-        var resultsRight = results.width();
-
-        var elemTop = element.offset().top;
-        // Compensate for scroll bars
-        var elemBottom = elemTop + (2.5 * element.height());
-
-        var elemLeft = element.offset().left;
-        var elemRight = elemLeft + element.width();
-
-        var v = ((elemBottom <= windowBottom) && (elemTop >= windowTop));
-        var h = ((elemRight <= resultsRight) && (elemLeft >= resultsLeft));
-
-        return (h && v);
-    },
-    scrollLeft: function(element){
-        var r = $("#results");
-        var scrollTo = r.scrollLeft() -
-                       (r.offset().left - element.offset().left);
-        r.scrollLeft(scrollTo);
-    },
-    scrollRight: function(element){
-        var r = $("#results");
-        var scrollTo = r.scrollLeft() +
-                       element.offset().left + element.width() -
-                       r.width();
-        r.scrollLeft(scrollTo);
-    },
-    scrollUp: function(element){
-        $(window).scrollTop(element.offset().top);
-    },
-
-    scrollDown: function(element){
-        $(window).scrollTop($(window).scrollTop() + (2 * element.height()));
-    },
-    scrollToStart: function(){
-        $(window).scrollTop(0).scrollLeft(0);
-        $("#results").scrollTop(0).scrollLeft(0);
+    var scrollIntoView = function(){
+        that.Scroller.scrollIntoView(selected);
     }
-};
+
+    // Convenience method to remove the old element's "select" class,
+    // add the "select" class to the new element, and assign the
+    // "selected" private variable. BAM!
+    var markSelected = function(oldElement, newElement){
+        if(oldElement) {
+            $(oldElement).removeClass("selected");
+        }
+        selected = $(newElement).addClass("selected"); 
+    };
+
+    this.moveLeft = function(){
+        var newElement;
+        if((newElement = selected.prev()).length){
+            markSelected(selected, newElement);
+            scrollIntoView();
+        }
+    };
+
+    this.moveRight =  function(){
+        var newElement;
+        if((newElement = selected.next()).length){
+            markSelected(selected, newElement);
+            scrollIntoView();
+        }
+    };
+
+
+    this.moveUp = function(){
+        var prevRow
+        if((prevRow = selected.parent().prev()).length){
+            var index = selected.index();
+            markSelected(selected, prevRow.children()[index])
+            scrollIntoView();
+        }
+    };
+
+    this.moveDown = function(){
+        var nextRow;
+        if((nextRow = selected.parent().next()).length){
+            var index = selected.index();
+            markSelected(selected, nextRow.children()[index]);
+            scrollIntoView();
+        }
+    };
+
+    // Select a element
+    this.select = function(element){
+        markSelected(selected, element);
+        scrollIntoView();
+    };
+}
+
 

@@ -67,9 +67,10 @@ a:active {
 
 #query textarea {
   height: 100px;
-
+  padding: 5px;
   font-size: 11px;
   font-family: "Bitstream Vera Sans Mono";
+  resize: none;
 }
 
 /* Tables
@@ -87,12 +88,13 @@ a:active {
 }
 
 #tables ul {
-  margin: 0;
+  margin: 0 0 15px;
   padding: 0;
   list-style: none;
   height: 100%;
   font-family: "Bitstream Vera Sans Mono";
   font-size: 12px;
+  overflow-y: auto;
 }
 
 #tables ul li {
@@ -123,6 +125,7 @@ a:active {
   margin-left: 192px;
   float: left;
   min-width: 768px;
+  height: 100%;
 }
 
 #results table {
@@ -152,15 +155,19 @@ a:active {
       background-color: #e8e8e8;
     }
 
-    #results td.type_datetime,
-    #results td.type_var_string,
-    #results td.type_char,
-    #results td.type_date {
+    #results td.selected {
+      background-color: #BBB;
+      border-color: #BBB;
+    }
+
+    #results td.datetime {
       white-space: nowrap;
     }
 
-    #results td.selected {
-      background-color: #333;
-      color: #FFF;
-      border-color: #000;
+    #results td.string {
+      white-space: nowrap;
+    }
+
+    #results td.text {
+      width: 300px;
     }
