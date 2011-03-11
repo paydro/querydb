@@ -6,7 +6,7 @@ var TableList = function(selector){
 
     // Initialize jQuery elements
     (function(){
-        
+
         var selectNext = function(){
             var selected = that.selected();
             var next = selected.nextAll("li:visible:first");
@@ -31,13 +31,15 @@ var TableList = function(selector){
         filterBox.keylock({
             "<Esc>": function(){
                 that.blur();
+                that.clear();
                 return false;
             },
             "<CR>": function(e){
                 $(document).trigger("browsetable", that.selectedTableName());
+                that.blur();
                 return false;
             },
-            "<A-DOWN>": selectNext, 
+            "<A-DOWN>": selectNext,
             "<A-UP>": selectPrev,
         });
 
@@ -59,6 +61,10 @@ var TableList = function(selector){
         filterBox.blur();
     };
 
+    this.clear = function(){
+        filterBox.val("").keyup();
+    }
+
     this.select = function(el) {
         list.find(".selected").removeClass("selected");
         el.addClass("selected")
@@ -69,14 +75,14 @@ var TableList = function(selector){
     };
 
     this.selectedTableName = function(){
-        return this.selected().find("a").text().trim();        
+        return this.selected().find("a").text().trim();
     };
 
 };
 
 var Results = function(selector, app){
     var element = $(selector);
-    
+
     // Clicking on a table cell highlights that cell
     element.find("td").live("click", function(){
         app.nav.select($(this));
@@ -91,6 +97,8 @@ var QueryBox = function(selector){
     var element = $(selector);
     var form = element.find("form");
     var textarea = element.find("textarea");
+    var messageBox = element.find(".message-box");
+    var ajaxLoader = element.find(".ajax-loader");
     var that = this;
 
     // Initialize jQuery elements
@@ -121,7 +129,7 @@ var QueryBox = function(selector){
     };
 
     this.update = function(value){
-        textarea.val(value);   
+        textarea.val(value);
     };
 
     this.query = function(){
@@ -129,7 +137,23 @@ var QueryBox = function(selector){
     };
 
     this.resize = function(){
-        textarea.css({"width": ($(window).width()-195)});
+        element.css({"width": ($(window).width()-194)});
+    };
+
+    this.addMessage = function(msg){
+        var message = $("<p>" + msg + "</p>").appendTo(messageBox);
+        setTimeout(function(){
+            console.log("timeout called");
+            message.fadeOut("fast", function() { message.remove(); });
+        }, 3000);
+    };
+
+    this.startAjaxLoader = function(){
+        ajaxLoader.show();
+    };
+
+    this.stopAjaxLoader = function(){
+        ajaxLoader.hide();
     };
 };
 
@@ -140,7 +164,7 @@ var Server = function(queryHistory, app){
     var cacheResults = {};
 
     this.exec = function(query, reload){
-        if(arguments.length == 1) reload = false;
+        if(arguments.length == 1) reload = true;
 
         hash = queryHistory.hash(query);
         if(cacheResults[hash] && reload == false) {
@@ -154,8 +178,16 @@ var Server = function(queryHistory, app){
             type: "POST",
             dataType: "json",
             success: function(json){
-                updateResults(json);                
-                addToCache(query, json);
+                if(json.html){
+                    updateResults(json);
+                    addToCache(query, json);
+                }
+                else if(json.affected_rows){
+                    app.queryBox.addMessage(
+                        json.affected_rows + " rows affected"
+                    )
+                    app.results.update("");
+                }
             },
             error: function(response){
                 // TODO: Change into a flash-type message rather
@@ -166,7 +198,7 @@ var Server = function(queryHistory, app){
     };
 
     var updateResults = function(json){
-        app.results.update(json["html"]);
+        app.results.update(json.html);
         app.nav.select($("#results td:first")); // TODO Use app.results
         app.updateTitle(query);
     };
@@ -196,7 +228,7 @@ var QueryHistory = function(){
     };
 
     this.addWithHash = function(hash, query){
-        hash = "#" + hash; 
+        hash = "#" + hash;
         localStorage.setItem(hash, query);
         history.pushState(null, "", location.pathname + hash);
         return hash;
@@ -208,7 +240,7 @@ var QueryHistory = function(){
 };
 
 var QueryBuilder = function(){
-    var queryCache = {}; 
+    var queryCache = {};
 
     this.fromTable = function(name){
         if(queryCache[name]) { return queryCache[name]; }
@@ -222,7 +254,7 @@ var app = {
     updateTitle: (function(){
         var title = $("title");
         return(function(val){
-            title.text(val);      
+            title.text(val);
         });
     })(),
 
@@ -264,16 +296,13 @@ $(document).bind("reloadquery", function(e, sql){
 // Onload function
 // ***************
 $(function(){
-    
+
     app.queryBox = new QueryBox("#query");
     app.results = new Results("#results", app);
     app.tables = new TableList("#tables");
     app.nav = new Navigator();
 
     app.resizeElements();
-
-    // Force query box to be the full width at the top
-    // $("#query textarea").css({"width": ($(window).width()-195)});
 
     // Global key bindings
     $(document).keylock({
@@ -282,7 +311,7 @@ $(function(){
         "p": function(){ history.back(); },
 
         // Reload current query
-        "r": function(){ 
+        "r": function(){
             $(document).trigger("reloadquery", app.queryBox.query());
         },
 
@@ -291,6 +320,8 @@ $(function(){
         "l": app.nav.moveRight,
         "j": app.nav.moveDown,
         "k": app.nav.moveUp,
+        "0": app.nav.moveToStart,
+        "$": app.nav.moveToEnd,
 
         // Go-to key bindings
         "g": {
@@ -309,17 +340,34 @@ $(function(){
     // Take control of the history
     $(window).bind('popstate', function(event){
         if(location.hash == "") {
-            app.queryBox.update("");   
+            app.queryBox.update("");
         }
         else {
             var query = queryHistory.findHash(location.hash)
             app.queryBox.update(query);
-            server.exec(query);
+            app.updateTitle(query);
+
+            // Only execute READ queries on reload
+            if(!query.match(/insert|delete|update|alter/i)) {
+                server.exec(query);
+            }
+            else {
+                app.results.update("Don't worry, the above query wasn't run! If you want to run it, just hit the 'QUERY' button and it'll go to work.");
+            }
         }
     }).resize(function(){
-        app.resizeElements();   
+        app.resizeElements();
     });
 
+
+    $(document).ajaxSend(function(){
+        app.queryBox.startAjaxLoader();
+    }).ajaxComplete(function(){
+        app.queryBox.stopAjaxLoader();
+        // If the window adds scrollbars after an AJAX load, we need to
+        // resize the elements on the page.
+        app.resizeElements();
+    });
 });
 
 

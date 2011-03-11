@@ -1,15 +1,8 @@
 TODO:
 
 * Don't save bad queries into the hashstack
-* Add MRU to hashstack that works like a browser's back/foward
-* If browsing via the table browser, set a table flag on the page
-  so that it's easy to make foreign key requests with a given id.
-  i.e., enter on a primary key should allow you to select a foreign
-  key table
-* Allow full screen mode
 * Use <C-]> to move between foreign key fields
 * Move in blocks of 5 up and down with CTRL + D and CTRL + U
 * Move to end of row with $ and beginning with 0 or ^
-
-* Add tabs
+* Add tabs for multiple queries
 

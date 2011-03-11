@@ -9,16 +9,16 @@ var Navigator = function(){
         scrollIntoView: function(element){
             var borderTop, borderBottom, borderLeft, borderRight,
                 elTop, elBottom, elLeft, elRight, win;
-            
+
             win = $(window)
-            borderTop = win.scrollTop() + that.Scroller.topPadding; 
+            borderTop = win.scrollTop() + that.Scroller.topPadding;
             // Without subtracting 15 from the bottom border, the element will
-            // be off screen. The difference is to push it into the viewable 
+            // be off screen. The difference is to push it into the viewable
             // area. Sadly, I'm not sure why I have to do this.
             borderBottom = win.scrollTop() + win.height() - 15;
             borderLeft = win.scrollLeft() + that.Scroller.leftPadding;
             // Again, like the bottom border trick above, subtract 25 so that
-            // the selected element is pushed into the viewable area. 
+            // the selected element is pushed into the viewable area.
             borderRight = win.scrollLeft() + win.width() - 25;
 
             elTop = element.offset().top;
@@ -28,7 +28,7 @@ var Navigator = function(){
 
             if(elBottom > borderBottom){
                 scrollAmount = win.scrollTop() + elBottom - borderBottom;
-                win.scrollTop(scrollAmount);   
+                win.scrollTop(scrollAmount);
             }
 
             if(elTop < borderTop){
@@ -57,7 +57,7 @@ var Navigator = function(){
         if(oldElement) {
             $(oldElement).removeClass("selected");
         }
-        selected = $(newElement).addClass("selected"); 
+        selected = $(newElement).addClass("selected");
     };
 
     this.moveLeft = function(){
@@ -95,11 +95,20 @@ var Navigator = function(){
         }
     };
 
+    this.moveToStart = function(){
+        that.select(selected.parent().find(":first-child"));
+    };
+
+    this.moveToEnd = function(){
+        that.select(selected.parent().find(":last-child"));
+    };
+
     // Select a element
     this.select = function(element){
         markSelected(selected, element);
         scrollIntoView();
     };
+
 };
 
 

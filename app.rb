@@ -38,7 +38,7 @@ module QueryDB
       include Rack::Utils
       alias_method :h, :escape_html
 
-      # Determine what type of column the field is. Not very awesome, 
+      # Determine what type of column the field is. Not very awesome,
       # but solves the issues of text fields being to large and stopping
       # time fields from wrapping.
       #
@@ -65,15 +65,16 @@ module QueryDB
 
     post "/query" do
       begin
-        @results = query(params[:sql])
-        @columns = @results.fields
-
-        result = {
-          :html => erb(:query, :layout => false),
-        }
-
-        content_type "application/json"
-        result.to_json
+        if results = query(params[:sql])
+          @results = results
+          @columns = @results.fields
+          result = { :html => erb(:query, :layout => false) }
+          content_type "application/json"
+          result.to_json
+        else
+          affected_rows = query("SELECT ROW_COUNT()").to_a.first.first
+          {:affected_rows => affected_rows}.to_json
+        end
       rescue Mysql2::Error => e
         halt 400, e.message
       end

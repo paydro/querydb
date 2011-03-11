@@ -12,13 +12,17 @@
 
   <div id="query" class="clearfix">
     <form action="/query" method="get">
-      <textarea name="sql" id="sql"></textarea>
-
+      <div class="inputs">
+        <textarea name="sql" id="sql"></textarea>
+      </div>
       <div class="submit">
+        <img src="/images/ajax-loader.gif" width="16" height="16" style="display: none;" class="ajax-loader">
         <input type="submit" value="Query" />
       </div>
+      <div class="message-box"></div>
     </form>
   </div>
 
   <div id="results">
   </div>
+
