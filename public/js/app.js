@@ -164,7 +164,7 @@ var Server = function(queryHistory, app){
     var cacheResults = {};
 
     this.exec = function(query, reload){
-        if(arguments.length == 1) reload = true;
+        if(arguments.length == 1) reload = false;
 
         hash = queryHistory.hash(query);
         if(cacheResults[hash] && reload == false) {
@@ -275,13 +275,13 @@ $(document).bind("browsetable", function(e, table){
 
     app.queryBox.update(query);
     app.updateTitle(query);
-    server.exec(query);
+    server.exec(query, true);
     queryHistory.addWithHash(table, query);
     app.tables.blur();
 });
 
 $(document).bind("execquery", function(e, query){
-    server.exec(query);
+    server.exec(query, true);
     queryHistory.add(query);
     app.updateTitle(query);
     app.queryBox.blur();
