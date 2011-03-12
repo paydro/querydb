@@ -253,7 +253,20 @@ input[type="submit"]:hover {
       background-color: #e8e8e8;
     }
 
+    #results tbody td:hover {
+      background-color: #c5c5c5;
+    }
+
+    #results tbody tr:hover {
+      background-color: #d0d0d0;
+    }
+
     #results td.selected {
+      background-color: #BBB;
+      border-color: #BBB;
+    }
+
+    #results td.selected:hover {
       background-color: #BBB;
       border-color: #BBB;
     }
