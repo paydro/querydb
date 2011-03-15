@@ -44,16 +44,9 @@ module QueryDB
       #
       # Better solution: parse the SQL statement to find the table(s) and
       # determine column types
-      def column_class(col, val)
-        classes = []
-        classes << "text" if(val.is_a?(String) && val.length > 100)
-        classes << "string" if(val.is_a?(String) && val.length <= 100)
-        classes << "datetime" if col.match(/^.*(_at|_on)$/)
-        if classes.empty?
-          ""
-        else
-          %Q[ class="#{classes.join(" ")}"]
-        end
+      def column_class(col)
+        p col
+        " class=\"#{@column_types[col]}\"" if @column_types[col]
       end
     end
 
@@ -64,13 +57,15 @@ module QueryDB
     end
 
     post "/query" do
+      content_type "application/json"
+
       begin
         if results = query(params[:sql])
           @results = results
           @columns = @results.fields
-          result = { :html => erb(:query, :layout => false) }
-          content_type "application/json"
-          result.to_json
+          @column_types = column_types
+
+          { :html => erb(:query, :layout => false) }.to_json
         else
           affected_rows = query("SELECT ROW_COUNT()").to_a.first.first
           {:affected_rows => affected_rows}.to_json
@@ -83,6 +78,28 @@ module QueryDB
     protected
       def load_tables
         @tables = query(%[SHOW TABLES])
+      end
+
+      # Find the table being queried and find all the column types
+      # Only works for single table queries
+      def column_types
+        types = {}
+        if matches = params[:sql].match(/from\s*`?([^\s`]+)`?/im)
+          table = matches[1]
+
+          results = query("DESCRIBE `#{table}`")
+          results.each do |row|
+            types[row[0]] = base_type(row[1])
+          end
+        end
+        types
+      end
+
+      def base_type(type)
+        return "int" if type.match(/^tinyint|smallint|mediumint|int|bigint/i)
+        return "float" if type.match(/^float|decimal/i)
+        return "string" if type.match(/^char|varchar/i)
+        return type
       end
   end
 end

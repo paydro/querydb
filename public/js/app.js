@@ -281,7 +281,7 @@ $(document).bind("browsetable", function(e, table){
 });
 
 $(document).bind("execquery", function(e, query){
-    server.exec(query, true);
+    server.exec(query);
     queryHistory.add(query);
     app.updateTitle(query);
     app.queryBox.blur();

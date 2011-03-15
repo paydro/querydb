@@ -2,7 +2,7 @@
   <thead>
     <tr>
       <% @columns.each do |column| %>
-        <th><%= column %></th>
+        <th<%= column_class(column) %>><span><%= column %></span></th>
       <% end %>
     </tr>
   </thead>
@@ -10,7 +10,7 @@
     <% @results.each do |row| %>
         <tr>
           <% row.each_with_index do |val,i| %>
-            <td<%= column_class(@columns[i], val) %>><%= h val %></td>
+            <td<%= column_class(@columns[i]) %>><%= h val %></td>
           <% end %>
         </tr>
     <% end %>
