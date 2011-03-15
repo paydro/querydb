@@ -143,7 +143,6 @@ var QueryBox = function(selector){
     this.addMessage = function(msg){
         var message = $("<p>" + msg + "</p>").appendTo(messageBox);
         setTimeout(function(){
-            console.log("timeout called");
             message.fadeOut("fast", function() { message.remove(); });
         }, 3000);
     };
