@@ -105,6 +105,7 @@ var Navigator = function(){
 
     // Select a element
     this.select = function(element){
+        if(!element.length) return;
         markSelected(selected, element);
         scrollIntoView();
     };

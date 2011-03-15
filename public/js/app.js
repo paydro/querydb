@@ -198,7 +198,8 @@ var Server = function(queryHistory, app){
 
     var updateResults = function(json){
         app.results.update(json.html);
-        app.nav.select($("#results td:first")); // TODO Use app.results
+        // TODO Use app.results
+        app.nav.select($("#results td:first").not(".empty-set"));
         app.updateTitle(query);
     };
 

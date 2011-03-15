@@ -271,6 +271,12 @@ input[type="submit"]:hover {
       border-color: #BBB;
     }
 
+    #results td.empty-set p {
+      margin: 5px 0;
+      font-style: italic;
+      color: #999;
+    }
+
     #results td.datetime {
       white-space: nowrap;
     }

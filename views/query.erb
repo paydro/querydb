@@ -7,6 +7,7 @@
     </tr>
   </thead>
   <tbody>
+  <% if @results.count > 0 %>
     <% @results.each do |row| %>
         <tr>
           <% row.each_with_index do |val,i| %>
@@ -14,6 +15,12 @@
           <% end %>
         </tr>
     <% end %>
+  <% else %>
+    <tr>
+      <td class="empty-set" colspan="<%= @columns.size %>">
+        <p>0 records found</p>
+      </td>
+  <% end %>
   </tbody>
 </table>
 
