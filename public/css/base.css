@@ -290,3 +290,7 @@ input[type="submit"]:hover {
       display: block;
       width: 350px;
     }
+
+    #results .null {
+      color: #888;
+    }

@@ -11,7 +11,7 @@
     <% @results.each do |row| %>
         <tr>
           <% row.each_with_index do |val,i| %>
-            <td<%= column_class(@columns[i]) %>><%= h val %></td>
+            <td<%= column_class(@columns[i], val) %>><%= h(val.nil? ? "NULL" : val) %></td>
           <% end %>
         </tr>
     <% end %>

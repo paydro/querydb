@@ -44,9 +44,16 @@ module QueryDB
       #
       # Better solution: parse the SQL statement to find the table(s) and
       # determine column types
-      def column_class(col)
-        p col
-        " class=\"#{@column_types[col]}\"" if @column_types[col]
+      def column_class(col, val = false)
+        html_classes = []
+        html_classes << @column_types[col] if @column_types[col]
+        html_classes << "null" if val.nil?
+
+        %Q[ class="#{html_classes.join(" ")}"] if !html_classes.empty?
+      end
+
+      def value_class(val)
+        %Q[ class="null"] if val.nil?
       end
     end
 
@@ -65,7 +72,7 @@ module QueryDB
           @columns = @results.fields
           @column_types = column_types
 
-          { :html => erb(:query, :layout => false) }.to_json
+          {:html => erb(:query, :layout => false)}.to_json
         else
           affected_rows = query("SELECT ROW_COUNT()").to_a.first.first
           {:affected_rows => affected_rows}.to_json
