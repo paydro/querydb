@@ -1,9 +1,10 @@
 TODO:
 
+* Allow user to enter in db connection info (host/username/password/etc)
+* Add update/delete/create ability when looking at table rows
 * Don't save bad queries
 * Use <C-]> to move between foreign key fields
 * Move in blocks of 5 up and down with CTRL + D and CTRL + U
-* Move to end of row with $ and beginning with 0 or ^
 * Add tabs for multiple queries
 * Add ability to switch databases
 
