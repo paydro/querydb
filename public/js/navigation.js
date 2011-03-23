@@ -61,6 +61,7 @@ var Navigator = function(){
     };
 
     this.moveLeft = function(){
+        if(!selected) return;
         var newElement;
         if((newElement = selected.prev()).length){
             markSelected(selected, newElement);
@@ -69,6 +70,7 @@ var Navigator = function(){
     };
 
     this.moveRight =  function(){
+        if(!selected) return;
         var newElement;
         if((newElement = selected.next()).length){
             markSelected(selected, newElement);
@@ -78,7 +80,8 @@ var Navigator = function(){
 
 
     this.moveUp = function(){
-        var prevRow
+        if(!selected) return;
+        var prevRow;
         if((prevRow = selected.parent().prev()).length){
             var index = selected.index();
             markSelected(selected, prevRow.children()[index])
@@ -87,6 +90,7 @@ var Navigator = function(){
     };
 
     this.moveDown = function(){
+        if(!selected) return;
         var nextRow;
         if((nextRow = selected.parent().next()).length){
             var index = selected.index();
@@ -96,10 +100,12 @@ var Navigator = function(){
     };
 
     this.moveToStart = function(){
+        if(!selected) return;
         that.select(selected.parent().find(":first-child"));
     };
 
     this.moveToEnd = function(){
+        if(!selected) return;
         that.select(selected.parent().find(":last-child"));
     };
 
