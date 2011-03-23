@@ -39,8 +39,8 @@ module QueryDB
       alias_method :h, :escape_html
 
       # Determine what type of column the field is. Not very awesome,
-      # but solves the issues of text fields being to large and stopping
-      # time fields from wrapping.
+      # but solves the issues of text fields being to large
+      # time fields wrapping.
       #
       # Better solution: parse the SQL statement to find the table(s) and
       # determine column types
@@ -54,6 +54,24 @@ module QueryDB
 
       def value_class(val)
         %Q[ class="null"] if val.nil?
+      end
+
+      def value(val, column)
+        out = val.nil? ? "NULL" : val
+        if @column_types[column] == "text"
+          if out.length <= 60
+            out = %Q[<div class="text">#{out}</div>]
+          else
+            out = %Q[
+              <div class="text">
+                <div class="partial">#{out[0..60]} <br>...</div>
+                <div class="full">#{out}</div>
+              </div>
+            ]
+          end
+        end
+
+        out
       end
     end
 

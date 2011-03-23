@@ -128,6 +128,10 @@ var Navigator = function(){
         scrollIntoView();
     };
 
+    this.selected = function(){
+        return selected;
+    };
+
 };
 
 

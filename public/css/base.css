@@ -255,7 +255,11 @@ input[type="submit"]:hover {
     }
 
     #results tbody tr:nth-child(even) {
-      background-color: #e8e8e8;
+      background-color: #E8E8E8;
+    }
+
+    #results tbody tr:hover {
+      background-color: #e4e9ee;
     }
 
     #results tbody tr.selected {
@@ -289,17 +293,24 @@ input[type="submit"]:hover {
 
     /* Force the column to be a specific width. */
     #results th.text span,
-    #results td.text span {
-      display: block;
+    #results td.text div.text,
+    #results td.text div.partial,
+    #results td.text div.full,
+    #results th.text {
       width: 350px;
+    }
+
+    #results th.text span {
+      display: block;
+    }
+
+    #results td.text div.text {
       word-wrap: break-word;
     }
 
-    /* #results td.text span { */
-      /* height: 100px; */
-      /* text-overflow: ellipsis; */
-      /* overflow: hidden; */
-    /* } */
+    #results td.text div.full {
+      display: none;
+    }
 
     #results td.null {
       color: #888;

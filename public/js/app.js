@@ -84,6 +84,7 @@ var TableList = function(selector){
     };
 };
 
+// TODO: Move all navigation functions in here
 var Results = function(selector, app){
     var element = $(selector);
 
@@ -94,6 +95,12 @@ var Results = function(selector, app){
 
     this.update = function(html){
         element.html(html);
+    };
+
+    this.toggleTextCells = function(){
+        var textCells = app.nav.selected().parent().find(".text");
+        textCells.find(".partial").toggle();
+        textCells.find(".full").toggle();
     };
 };
 
@@ -320,6 +327,17 @@ $(function(){
             $(document).trigger("reloadquery", app.queryBox.query());
         },
 
+        "v": app.results.toggleTextCells,
+
+        "V": function(){
+            $("#results td.text .partial").hide();
+            $("#results td.text .full").show();
+        },
+        "<C-V>": function(){
+            $("#results td.text .partial").show();
+            $("#results td.text .full").hide();
+        },
+
         // Result Table navigation
         "h": app.nav.moveLeft,
         "l": app.nav.moveRight,
@@ -373,6 +391,7 @@ $(function(){
         // resize the elements on the page.
         app.resizeElements();
     });
+
 });
 
 
