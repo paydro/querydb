@@ -55,9 +55,21 @@ var Navigator = function(){
     // "selected" private variable. BAM!
     var markSelected = function(oldElement, newElement){
         if(oldElement) {
-            $(oldElement).removeClass("selected");
+            $(oldElement).removeClass("selected")
+                         .parents("tr")
+                            .removeClass("selected");
+
         }
-        selected = $(newElement).addClass("selected");
+
+        // Ensure operation on the TD element
+        newElement = $(newElement);
+        if(!newElement.is("td")){
+            newElement = newElement.parents("td");
+        }
+        selected = newElement.addClass("selected")
+                             .parents("tr")
+                                 .addClass("selected")
+                             .end();
     };
 
     this.moveLeft = function(){
@@ -101,12 +113,12 @@ var Navigator = function(){
 
     this.moveToStart = function(){
         if(!selected) return;
-        that.select(selected.parent().find(":first-child"));
+        that.select(selected.parent().find("td:first-child"));
     };
 
     this.moveToEnd = function(){
         if(!selected) return;
-        that.select(selected.parent().find(":last-child"));
+        that.select(selected.parent().find("td:last-child"));
     };
 
     // Select a element

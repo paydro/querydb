@@ -84,7 +84,7 @@ module QueryDB
 
     protected
       def load_tables
-        @tables = query(%[SHOW TABLES])
+        @tables = query(%[SHOW TABLES]).collect(&:first)
       end
 
       # Find the table being queried and find all the column types

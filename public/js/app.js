@@ -78,6 +78,10 @@ var TableList = function(selector){
         return this.selected().find("a").text().trim();
     };
 
+    this.resize = function(){
+        element.css({"height": $(window).height() - $("#header").height()});
+        list.css({"height": element.height() - filterBox.parent().height() - 4});
+    };
 };
 
 var Results = function(selector, app){
@@ -260,6 +264,7 @@ var app = {
 
     resizeElements: function(){
         app.queryBox.resize();
+        app.tables.resize();
     }
 };
 
