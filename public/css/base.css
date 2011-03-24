@@ -225,7 +225,6 @@ input[type="submit"]:hover {
 #results table {
   width: 100%;
   font-size: 11px;
-  font-family: "Bitstream Vera Sans";
   border-bottom: 1px solid #BBB;
   margin-bottom: 0;
 }
