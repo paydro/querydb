@@ -219,7 +219,7 @@ input[type="submit"]:hover {
   margin-left: 192px;
   float: left;
   min-width: 768px;
-  overflow: scroll;
+  overflow: auto;
 }
 
 #results table {
