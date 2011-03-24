@@ -1,54 +1,18 @@
 var Navigator = function(){
-    var selected; // element with class="selected"
+    // Holds onto the currently selected "td" element.
+    // This changes as the user selects/moves to new elements
+    var selected;
+
+    // Height of results header is 23 pixels.
+    // TODO Make this dynamic. It cannot be dynamic right now since the header
+    // for the #results table does not exist on initial load of the app.
+    var scroller = new Scroller($("#results"), {top: 23});
     var that = this;
 
-    // Helper that moves selected elements into view
-    this.Scroller = {
-        topPadding: 148,
-        leftPadding: 192,
-        scrollIntoView: function(element){
-            var borderTop, borderBottom, borderLeft, borderRight,
-                elTop, elBottom, elLeft, elRight, win;
-
-            win = $(window)
-            borderTop = win.scrollTop() + that.Scroller.topPadding;
-            // Without subtracting 15 from the bottom border, the element will
-            // be off screen. The difference is to push it into the viewable
-            // area. Sadly, I'm not sure why I have to do this.
-            borderBottom = win.scrollTop() + win.height() - 15;
-            borderLeft = win.scrollLeft() + that.Scroller.leftPadding;
-            // Again, like the bottom border trick above, subtract 25 so that
-            // the selected element is pushed into the viewable area.
-            borderRight = win.scrollLeft() + win.width() - 25;
-
-            elTop = element.offset().top;
-            elBottom = elTop + element.height();
-            elLeft = element.offset().left;
-            elRight = elLeft + element.width();
-
-            if(elBottom > borderBottom){
-                scrollAmount = win.scrollTop() + elBottom - borderBottom;
-                win.scrollTop(scrollAmount);
-            }
-
-            if(elTop < borderTop){
-                win.scrollTop(elTop - that.Scroller.topPadding);
-            }
-
-            if(elLeft < borderLeft){
-                win.scrollLeft(elLeft - that.Scroller.leftPadding);
-            }
-
-            if(elRight > borderRight){
-                scrollAmount = win.scrollLeft() + elRight - borderRight;
-                win.scrollLeft(scrollAmount);
-            }
-        }
-    };
-
+    // Convenience method - scroll the selected element into view
     var scrollIntoView = function(){
-        that.Scroller.scrollIntoView(selected);
-    }
+        scroller.scrollIntoView(selected);
+    };
 
     // Convenience method to remove the old element's "select" class,
     // add the "select" class to the new element, and assign the

@@ -162,7 +162,6 @@ input[type="submit"]:hover {
   top: 0px;
   left: 0;
   border-right: 1px solid #a3a3a3;
-  /* height: 100%; */
   z-index: 10;
   background-color: #dee4ea;
 }
@@ -220,6 +219,7 @@ input[type="submit"]:hover {
   margin-left: 192px;
   float: left;
   min-width: 768px;
+  overflow: scroll;
 }
 
 #results table {

@@ -3,6 +3,7 @@ var TableList = function(selector){
     var list = element.find("ul");
     var filterBox = element.find("#filter");
     var that = this;
+    var scroller = new Scroller(list);
 
     // Initialize jQuery elements
     (function(){
@@ -13,6 +14,7 @@ var TableList = function(selector){
             if(next.length){
                 selected.removeClass("selected");
                 next.addClass("selected");
+                scroller.scrollIntoView(that.selected());
             }
             return false;
         };
@@ -23,6 +25,7 @@ var TableList = function(selector){
             if(prev.length){
                 selected.removeClass("selected");
                 prev.addClass("selected");
+                scroller.scrollIntoView(that.selected());
             }
             return false;
         };
@@ -52,6 +55,10 @@ var TableList = function(selector){
             return false;
         });
     })();
+
+    this.element = function(){
+        return element;
+    };
 
     this.focus = function(){
         filterBox.focus().select();
@@ -93,6 +100,10 @@ var Results = function(selector, app){
         app.nav.select($(this));
     });
 
+    this.element = function(){
+        return element;
+    };
+
     this.update = function(html){
         element.html(html);
     };
@@ -101,6 +112,13 @@ var Results = function(selector, app){
         var textCells = app.nav.selected().parent().find(".text");
         textCells.find(".partial").toggle();
         textCells.find(".full").toggle();
+    };
+
+    this.resize = function(){
+        element.css({
+            "width": $(window).width() - app.tables.element().outerWidth(),
+            "height": $(window).height() - app.queryBox.element().outerHeight()
+        });
     };
 };
 
@@ -130,6 +148,10 @@ var QueryBox = function(selector){
             return false;
         });
     })();
+
+    this.element = function(){
+        return element;
+    };
 
     this.focus = function(){
         textarea.focus().select();
@@ -272,6 +294,7 @@ var app = {
     resizeElements: function(){
         app.queryBox.resize();
         app.tables.resize();
+        app.results.resize();
     }
 };
 
