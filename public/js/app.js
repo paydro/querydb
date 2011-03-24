@@ -114,6 +114,10 @@ var Results = function(selector, app){
         textCells.find(".full").toggle();
     };
 
+    this.selectFirstCell = function(){
+        app.nav.select(element.find("td:first").not(".empty-set"));
+    };
+
     this.resize = function(){
         element.css({
             "width": $(window).width() - app.tables.element().outerWidth(),
@@ -231,8 +235,7 @@ var Server = function(queryHistory, app){
 
     var updateResults = function(json){
         app.results.update(json.html);
-        // TODO Use app.results
-        app.nav.select($("#results td:first").not(".empty-set"));
+        app.results.selectFirstCell();
         app.updateTitle(query);
     };
 
