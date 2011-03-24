@@ -227,6 +227,7 @@ input[type="submit"]:hover {
   font-size: 11px;
   border-bottom: 1px solid #BBB;
   margin-bottom: 0;
+  color: #000;
 }
     #results th, #results td {
         padding: 5px 10px;
@@ -282,7 +283,8 @@ input[type="submit"]:hover {
       color: #999;
     }
 
-    #results td.datetime {
+    #results td.datetime,
+    #results td.timestamp {
       white-space: nowrap;
     }
 
