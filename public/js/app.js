@@ -419,7 +419,7 @@ $(function(){
             app.updateTitle(query);
 
             // Only execute READ queries on reload
-            if(!query.match(/insert|delete|update|alter/i)) {
+            if(!query.match(/insert|delete|update|alter|create/i)) {
                 server.exec(query);
             }
             else {
