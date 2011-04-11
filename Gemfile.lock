@@ -3,12 +3,11 @@ GEM
   specs:
     archive-tar-minitar (0.5.2)
     columnize (0.3.2)
-    linecache19 (0.5.11)
+    linecache19 (0.5.12)
       ruby_core_source (>= 0.1.4)
-    mustache (0.11.2)
-    mysql2 (0.2.6)
-    rack (1.2.1)
-    ruby-debug-base19 (0.11.24)
+    mysql2 (0.2.7)
+    rack (1.2.2)
+    ruby-debug-base19 (0.11.25)
       columnize (>= 0.3.1)
       linecache19 (>= 0.5.11)
       ruby_core_source (>= 0.1.4)
@@ -16,17 +15,18 @@ GEM
       columnize (>= 0.3.1)
       linecache19 (>= 0.5.11)
       ruby-debug-base19 (>= 0.11.19)
-    ruby_core_source (0.1.4)
+    ruby_core_source (0.1.5)
       archive-tar-minitar (>= 0.5.2)
-    sinatra (1.0)
-      rack (>= 1.0)
-    yajl-ruby (0.7.8)
+    sinatra (1.2.1)
+      rack (~> 1.1)
+      tilt (< 2.0, >= 1.2.2)
+    tilt (1.2.2)
+    yajl-ruby (0.8.2)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  mustache
   mysql2
   ruby-debug19
   sinatra
