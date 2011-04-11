@@ -42,6 +42,11 @@ var TableList = function(selector){
                 that.blur();
                 return false;
             },
+            "<D-CR>": function(e){
+                $(document).trigger("describetable", that.selectedTableName());
+                that.blur();
+                return false;
+            },
             "<A-DOWN>": selectNext,
             "<A-UP>": selectPrev,
         });
@@ -283,6 +288,13 @@ var QueryBuilder = function(){
         queryCache[name] = "SELECT * FROM `" + name + "` LIMIT 200";
         return queryCache[name];
     }
+
+    this.describeTable = function(name){
+        cacheKey = "describe-" + name;
+        if(queryCache[cacheKey]) { return queryCache[name]; }
+        queryCache[cacheKey] = "DESCRIBE `" + name + "`";
+        return queryCache[cacheKey];
+    }
 };
 
 // Global module for jQuery objects
@@ -310,6 +322,16 @@ var server = new Server(queryHistory, app);
 
 $(document).bind("browsetable", function(e, table){
     var query = queryBuilder.fromTable(table)
+
+    app.queryBox.update(query);
+    app.updateTitle(query);
+    server.exec(query, true);
+    queryHistory.addWithHash(table, query);
+    app.tables.blur();
+});
+
+$(document).bind("describetable", function(e, table){
+    var query = queryBuilder.describeTable(table);
 
     app.queryBox.update(query);
     app.updateTitle(query);
