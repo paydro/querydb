@@ -1,5 +1,4 @@
-QueryDB
--------
+# QueryDB
 
 QueryDB is a MySQL database browser for the web. QueryDB fixes the pain points
 in browsing data. Here are the few things QueryDB does to alleviate MySQL
@@ -11,15 +10,13 @@ querying.
   which means history built in with a known model.
 
 
-Prerequisites
-=============
+## Prerequisites
 
 * Ruby 1.9.2
 * Bundler
 
 
-Installation
-============
+## Installation
 
 Get the code:
 
@@ -45,8 +42,7 @@ Now start up the app with rackup (or your favorite rack server):
 Go to `http://localhost:9292` in your browser and query away!
 
 
-Keyboard Shortcuts
-==================
+## Keyboard Shortcuts
 
 There are three different areas within the application that can be focused:
 manual query box, database tables, and query results.
@@ -68,7 +64,7 @@ manual query box, database tables, and query results.
 
     v: Expand the current selected row's text columns
     V: Expand all text columns in the results
-    <C-V>: Hide all text columns in the results
+    CTRL+V: Hide all text columns in the results
 
     When focused in the query box
     CTRL+Enter: Submit query
